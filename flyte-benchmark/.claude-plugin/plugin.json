@@ -1,0 +1,14 @@
+{
+  "name": "flyte-benchmark",
+  "displayName": "Flyte Benchmark",
+  "version": "0.1.0",
+  "description": "Reproduce the Flyte v1 vs v2 (OSS) vs Union control-plane scaling benchmarks — fan-out, long-chain, concurrency, and the swarm scale/OOM test. Collects wall-clock, peak memory, and OOM results and compares to reference numbers.",
+  "author": {
+    "name": "flyteorg",
+    "url": "https://github.com/flyteorg"
+  },
+  "homepage": "https://github.com/flyteorg/benchmark",
+  "repository": "https://github.com/flyteorg/benchmark",
+  "license": "Apache-2.0",
+  "keywords": ["flyte", "benchmark", "orchestration", "scale", "kubernetes", "control-plane"]
+}
