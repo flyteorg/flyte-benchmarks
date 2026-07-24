@@ -102,6 +102,44 @@ def single_workflow():
     print("wrote charts/single_workflow.png")
 
 
+def long_chain():
+    """OSS v2 vs Union on a sequential chain (re-run 2026-07-24, same driver/day).
+
+    Newer builds than the v1-vs-v2 rows in panel B of single_workflow() — don't
+    read the two figures against each other.
+    """
+    n = [100, 300, 500]
+    oss = [18.9, 53.4, 83.5]                           # execution seconds, submit excluded
+    union = [19.0, 53.5, 83.7]
+
+    fig, ax = plt.subplots(figsize=(6.8, 4.2))
+    ax.plot(n, oss, "-s", color=V2, lw=2.5, ms=9, label="Flyte v2 (OSS)")
+    ax.plot(n, union, "--^", color=UN, lw=2, ms=8, markeredgecolor="black",
+            markeredgewidth=.5, label="Union (v2)")
+    for x, y in zip(n, oss):
+        ax.annotate(f"{y:.0f} s", (x, y), textcoords="offset points", xytext=(0, -17),
+                    ha="center", fontsize=9, color="#444")
+
+    ax.annotate("The two planes overlap. A chain runs one\n"
+                "action at a time, so a scaled-out plane has\n"
+                "nothing to parallelize: runtime = length ×\n"
+                "per-transition latency (~0.17 s/node).",
+                xy=(215, 8), fontsize=9, color="#555")
+
+    ax.set_xlabel("Chain length (nodes)")
+    ax.set_ylabel("Execution time (s)")
+    ax.set_title("Long chain — where scale-out does NOT help", fontsize=12)
+    ax.set_xticks(n)
+    ax.set_xlim(60, 540)
+    ax.set_ylim(0, 100)
+    ax.legend(loc="upper left", frameon=False, fontsize=10.5)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", ls=":", alpha=.4)
+    fig.tight_layout()
+    fig.savefig("charts/long_chain.png", dpi=150)
+    print("wrote charts/long_chain.png")
+
+
 def swarm():
     """The scale test: K independent runs x 2,000 leaves, up to 200k actions."""
     oss_x = [4, 10, 20, 50, 100]                       # thousands of actions
@@ -142,4 +180,5 @@ def swarm():
 if __name__ == "__main__":
     concurrency()
     single_workflow()
+    long_chain()
     swarm()

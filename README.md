@@ -74,6 +74,13 @@ down a long chain.
 
 ![Fan-out runtime and long-chain memory — v1 vs v2](charts/single_workflow.png)
 
+**Long chain** — the counter-example, and the reason the shapes above matter.
+Re-run on both an OSS v2 cluster and Union on the same day: every point lands
+within 0.2 s. A chain executes one action at a time, so there is nothing for a
+scaled-out plane to parallelize — runtime is just length × per-transition latency.
+
+![Long chain — OSS v2 vs Union, indistinguishable](charts/long_chain.png)
+
 **Swarm scale test** — K independent runs × 2,000 leaves. OSS executor memory
 tracks *cumulative* actions (~54 MiB per 1,000), so an 8 GiB pod dies around 150k;
 the 200k run never finished. Union holds action state in a distributed store and
