@@ -1,0 +1,6 @@
+# Flyte v1 SDK. Install in its OWN venv — flytekit (v1) and flyte (v2) can't
+# share one environment.
+flytekit>=1.13
+# core-sleep leaf plugin (leaves run with no task pod). Not on PyPI yet; this is
+# the public fork branch the prebuilt benchmark image was built from.
+git+https://github.com/machichima/flytekit.git@add-sleep-plugin#subdirectory=plugins/flytekit-sleep

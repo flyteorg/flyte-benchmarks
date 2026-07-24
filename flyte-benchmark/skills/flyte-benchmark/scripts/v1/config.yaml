@@ -1,0 +1,10 @@
+# flytekit config for the Flyte v1 cluster under test.
+# Point `endpoint` at your flyteadmin. Override this whole file with
+# FLYTE_BENCH_CONFIG=/path/to/other.yaml.
+admin:
+  endpoint: dns:///flyte.example.com
+  authType: Pkce
+  insecure: false
+logger:
+  show-source: true
+  level: 0

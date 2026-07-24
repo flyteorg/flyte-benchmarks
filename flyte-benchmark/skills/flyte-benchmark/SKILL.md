@@ -21,14 +21,20 @@ so you measure *orchestration* cost, not pod startup.
 | concurrency | `concurrency.py` | hold M leaves live for a window — steady-state load |
 | swarm | `swarm.py` | K independent fan-out runs at once — the scale / OOM test |
 
+The same four shapes exist for **Flyte v1** under `scripts/v1/` (flytekit +
+flytepropeller), plus `nested.py` for depth. Same sweeps, same `RESULT_JSON:` line.
+
 Metrics: end-to-end **wall-clock** (from the driver) and **peak memory + OOM** of
 the orchestration pod (from `sample_mem.sh`).
 
 ## Prerequisites
 
 - Python 3.12 + the Flyte v2 SDK: `pip install -r requirements.txt`
+- For the v1 cluster: a **separate** venv with `pip install -r scripts/v1/requirements.txt`
+  (flytekit + the core-sleep plugin). flytekit and the v2 SDK cannot share an env.
 - A Flyte config **per target cluster** (v1, v2-OSS, Union). Point at one with
-  `FLYTE_BENCH_CONFIG=/path/to/config.yaml` (default `~/.flyte/config.yaml`).
+  `FLYTE_BENCH_CONFIG=/path/to/config.yaml` (default `~/.flyte/config.yaml`; the
+  v1 scripts default to `scripts/v1/config.yaml`).
 - `kubectl` access to the orchestration pod + `metrics-server` (for memory sampling).
 
 ## How to run
@@ -52,11 +58,33 @@ for K in 2 5 10 25 50 100; do
 done
 ```
 
+On a **Flyte v1** cluster, use the flytekit scripts instead (own venv; flags are
+`--flag value`, durations in flytekit form):
+
+```bash
+cd scripts/v1
+$EDITOR config.yaml                       # admin.endpoint -> your flyteadmin
+
+python _runner.py fanout      --n_children 1000 --sleep_duration 0s
+python _runner.py long_chain  --length 100      --sleep_duration 0s
+python _runner.py concurrency --m 1000 --hold_seconds 120
+python _runner.py nested      --depth 20 --width 5 --sleep_duration 0s
+python swarm.py --k 10 --m 1000 --hold_seconds 120     # K workflows x m held leaves
+```
+
+Every v1 execution is launched with `--max-parallelism 1000` to match the v2 SDK
+default (`BENCH_MAX_PARALLELISM` to change it) — flytepropeller's default of ~25
+would throttle wide fan-outs for a reason unrelated to its control plane. Leaves
+are core-sleep here too, via a prebuilt public image; set `FLYTE_BENCH_V1_REGISTRY`
+to build your own instead.
+
 Memory + OOM (run in a second terminal *while a workload executes*):
 
 ```bash
-# v1 / OSS single-binary pod:
+# v2 / OSS single-binary pod:
 NS=flyte SEL='app.kubernetes.io/name=flyte-binary' CONT=flyte ./sample_mem.sh 1800
+# v1: sample flytepropeller
+NS=flyte SEL='app.kubernetes.io/name=flytepropeller' CONT=flytepropeller ./sample_mem.sh 1800
 # prints  PEAK_MEM_MIB=<n> RESTARTS_DELTA=<n>   (RESTARTS_DELTA>0 => OOMKilled, exit 137)
 ```
 
