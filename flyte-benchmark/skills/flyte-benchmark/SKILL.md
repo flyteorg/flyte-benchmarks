@@ -44,7 +44,21 @@ the orchestration pod (from `sample_mem.sh`).
 Run the **same commands against each cluster** so the comparison is apples-to-apples
 (same task image, driver, and retry budget — that fairness is the whole point).
 
-All paths below are relative to this skill directory.
+From a **clone of the repo**, the Makefile at its root is the shortest path —
+`V=v1`/`V=v2` picks the plane and the knobs are identical on both:
+
+```bash
+make help                                   # targets + current defaults
+make fanout V=v2 N=6000                     # and the same shape on v1: V=v1
+make long_chain V=v2 L=500
+make concurrency V=v2 M=40000 HOLD=120
+make swarm V=v2 K=25 N=2000
+make sweep V=v2                             # the recommended sweep
+make mem                                    # peak memory + OOM (second terminal)
+```
+
+Driving the scripts directly (e.g. when the skill was shared on its own) works
+too — all paths below are relative to this skill directory.
 
 ```bash
 export FLYTE_BENCH_CONFIG=~/.flyte/config.yaml    # <- the cluster under test

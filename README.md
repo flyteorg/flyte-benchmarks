@@ -113,6 +113,33 @@ export FLYTE_BENCH_CONFIG=~/.flyte/config.yaml   # <- config for the cluster und
 Run the **same commands against each cluster** (swap `FLYTE_BENCH_CONFIG`) so the
 comparison is apples-to-apples — same image, driver, and retry budget everywhere.
 
+### The short way — `make`
+
+The Makefile wraps both planes behind one interface: pick it with `V=v1` or
+`V=v2` and the same knobs work either side, so comparing planes is the same
+command twice.
+
+```bash
+make help                        # all targets + current defaults
+
+make fanout      V=v2 N=6000     # one run, 6,000 parallel leaves
+make fanout      V=v1 N=6000     # ...the same shape on a v1 cluster
+make long_chain  V=v2 L=500
+make concurrency V=v2 M=40000 HOLD=120
+make nested      V=v1 DEPTH=20 WIDTH=5
+make swarm       V=v2 K=25 N=2000
+
+make sweep       V=v2            # the recommended sweep (fanout + chain + concurrency)
+make sweep-swarm V=v2            # ramp K 2 -> 100 (up to 200k actions)
+make mem                         # peak memory + OOM, in a second terminal
+make report                      # summary table + charts from results.jsonl
+```
+
+Every run appends its `RESULT_JSON:` line to `results.jsonl`. `make install`
+installs the SDK for the selected plane into the currently active venv — v1 and
+v2 still need separate ones. The examples below are the underlying commands, if
+you'd rather drive the scripts directly.
+
 ### Example 1 — a quick single shape
 
 ```bash
@@ -223,6 +250,7 @@ executor OOMs the 200k swarm that Union completes.
 
 ```
 benchmark/                                  <- marketplace repo
+  Makefile                                  <- run any shape on either plane
   .claude-plugin/marketplace.json           <- marketplace catalog
   charts/                                   <- README charts + make_charts.py
   flyte-benchmark/                          <- the plugin
