@@ -36,6 +36,34 @@ Under *held* leaves (120 s), v1 OOMs its single CRD at ~6,000 held; v2 stays fla
 | 100 | 74 s | 16 s |
 | 500 | 365 s | 56 s |
 
+Peak control-plane memory over the sweep: v1 1,272 → 1,589 MiB (grows with the
+run); v2 flat at 298 → 327 MiB.
+
+### Union on the same shape (2026-07-24 re-run)
+
+Union and a single-pod OSS v2 are **indistinguishable** here — a chain executes
+one action at a time, so a scaled-out plane has nothing to parallelize. Wall-clock
+is `length × per-transition latency`, the same runs-service → executor →
+runs-service round trip in both. Union's advantage shows up in the concurrent
+shapes (swarm, held concurrency), not this one.
+
+Execution seconds (submit excluded), same driver and day on both clusters:
+
+| length | Flyte v2 (OSS) | Union | per-node |
+|---|---|---|---|
+| 100 | 18.9 s | 19.0 s | ~0.19 s |
+| 300 | 53.4 s | 53.5 s | ~0.18 s |
+| 500 | 83.5 / 83.6 s | 83.7 s | ~0.17 s |
+
+OSS executor over the whole sweep (1,900 actions, 8 GiB pod): peak **331 MiB**,
+0 restarts — matching the 327 MiB above. Union's control plane is hosted and
+multi-tenant, so a pod-RSS number there isn't comparable and was not taken.
+
+Note both planes ran ~0.167 s/node here versus ~0.11 s/node in the v1-vs-v2 rows
+above (56 s at length=500), on newer builds. Two independent clusters landing
+within 0.2 s of each other points at the per-transition path rather than cluster
+noise; treat the older long-chain wall-clocks as build-specific.
+
 ## Concurrency — K runs x 1,000 tasks held live 120 s
 
 | held tasks | Flyte v1 | Flyte v2 | peak mem (v2/OSS) |
