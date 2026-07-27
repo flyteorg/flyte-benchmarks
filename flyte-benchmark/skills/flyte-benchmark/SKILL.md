@@ -34,9 +34,9 @@ the orchestration pod (from `sample_mem.sh`).
 - [`uv`](https://docs.astral.sh/uv/). Every script carries its dependencies in a
   PEP 723 header, so `uv run` installs them (and Python 3.12) on first use —
   no venv, and the two SDKs never share an environment.
-- A Flyte config **per target cluster** (v1, v2-OSS, Union). Point at one with
-  `FLYTE_BENCH_CONFIG=/path/to/config.yaml` (default `~/.flyte/config.yaml`; the
-  v1 scripts fall back to `scripts/v1/config.yaml`).
+- A Flyte config **per target cluster** (v1, v2-OSS, Union). Both SDKs discover
+  it themselves: `FLYTECTL_CONFIG`, else `./config.yaml` / `./.flyte/config.yaml`
+  (v2 only), else `~/.flyte/config.yaml`.
 - `kubectl` access to the orchestration pod + `metrics-server` (for memory sampling).
 
 ## How to run
@@ -45,7 +45,7 @@ Run the **same commands against each cluster** so the comparison is
 apples-to-apples — same task image and driver, no relaunching failures.
 
 ```bash
-export FLYTE_BENCH_CONFIG=~/.flyte/config.yaml    # <- the cluster under test
+export FLYTECTL_CONFIG=~/.flyte/config.yaml       # <- the cluster under test
 
 uv run scripts/v2/fanout.py      --n 1000
 uv run scripts/v2/long_chain.py  --length 100
@@ -53,8 +53,8 @@ uv run scripts/v2/concurrency.py --m 5000 --hold 120
 uv run scripts/v2/swarm.py       --k 25 --n 2000     # 50k actions
 ```
 
-The v1 scripts take the same flags — swap `v2` for `v1` and point
-`scripts/v1/config.yaml` at your flyteadmin:
+The v1 scripts take the same flags — swap `v2` for `v1` (with `FLYTECTL_CONFIG`
+pointing at the v1 cluster's config):
 
 ```bash
 uv run scripts/v1/fanout.py --n 1000

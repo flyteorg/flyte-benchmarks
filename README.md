@@ -56,9 +56,9 @@ the orchestration pod (from `sample_mem.sh`).
 ## Results at a glance
 
 Measured runs — identical 8 GiB orchestration pods for Flyte v1 and Flyte v2
-(OSS), core-sleep leaves, same driver and retry budget everywhere. Full tables in
+(OSS), core-sleep leaves, same driver everywhere. Full tables in
 [`reference_results.md`](flyte-benchmark/skills/flyte-benchmark/reference_results.md);
-regenerate the charts with `python charts/make_charts.py`.
+regenerate the charts with `make charts`.
 
 **Steady-state concurrency** — the one shape run on all three planes. v2 is
 1.2–1.7× faster than v1 across the range; both OSS planes are bounded by a single
@@ -106,7 +106,7 @@ flags**, so comparing them is the same command twice:
 
 ```bash
 git clone https://github.com/flyteorg/benchmark && cd benchmark
-export FLYTE_BENCH_CONFIG=~/.flyte/config.yaml    # <- the cluster under test
+export FLYTECTL_CONFIG=~/.flyte/config.yaml       # <- the cluster under test
 
 uv run flyte-benchmark/skills/flyte-benchmark/scripts/v2/fanout.py --n 1000
 uv run flyte-benchmark/skills/flyte-benchmark/scripts/v1/fanout.py --n 1000
@@ -128,9 +128,9 @@ make sweep       V=v2                  # fanout + chain + concurrency ranges
 make sweep-swarm V=v2                  # ramp K 2 -> 100 (up to 200k actions)
 ```
 
-Run the **same commands against each cluster** (swap `FLYTE_BENCH_CONFIG`) so the
-comparison is apples-to-apples. For v1, point `scripts/v1/config.yaml` at your
-flyteadmin (or override it with `FLYTE_BENCH_CONFIG`). Failed runs are reported,
+Run the **same commands against each cluster** (swap `FLYTECTL_CONFIG`) so the
+comparison is apples-to-apples. Both SDKs read that variable themselves, so
+there is nothing benchmark-specific to configure. Failed runs are reported,
 never relaunched — a retry budget makes two clusters incomparable unless both use
 the same one.
 
@@ -174,9 +174,9 @@ executor OOMs the 200k swarm that Union completes.
 - [`uv`](https://docs.astral.sh/uv/) — it installs each script's dependencies
   (and a Python 3.12) on first run. Nothing else to install; the two SDKs never
   meet, since each script resolves in its own environment.
-- A Flyte config **per target cluster** (v1, v2-OSS, Union), selected with
-  `FLYTE_BENCH_CONFIG` (default `~/.flyte/config.yaml`; the v1 scripts fall back
-  to `scripts/v1/config.yaml`).
+- A Flyte config **per target cluster** (v1, v2-OSS, Union). Both SDKs discover
+  it the usual way: `FLYTECTL_CONFIG`, else `./config.yaml` / `./.flyte/config.yaml`
+  (v2 only), else `~/.flyte/config.yaml`.
 - For memory sampling: `kubectl` access to the orchestration pod + `metrics-server`.
 
 ## Fairness checklist
@@ -204,7 +204,7 @@ benchmark/                                  <- marketplace repo
       scripts/
         sample_mem.sh, plot_results.py      <- shared by both planes
         v2/                                 <- 4 benchmarks (Flyte v2 SDK) + _common.py
-        v1/                                 <- the same 4 on flytekit + config.yaml
+        v1/                                 <- the same 4 on flytekit
 ```
 
 ## License

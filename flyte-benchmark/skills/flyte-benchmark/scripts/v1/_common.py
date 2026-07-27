@@ -8,8 +8,10 @@ flag, so the same command line compares planes.
 The core-sleep flytekit plugin is not on PyPI yet; it lives on a public fork
 branch, and a prebuilt, anonymously-pullable image already exists.
 
+The cluster under test comes from flytekit's own config discovery — point
+`FLYTECTL_CONFIG` at a config file, or let it find `~/.flyte/config.yaml`.
+
 Env:
-  FLYTE_BENCH_CONFIG       flytekit config     (default: ./config.yaml next to this file)
   FLYTE_BENCH_PROJECT      project             (default: flytesnacks)
   FLYTE_BENCH_DOMAIN       domain              (default: development)
   BENCH_MAX_PARALLELISM    per-execution parallelism (default: 1000 — see below)
@@ -31,8 +33,6 @@ from flytekit import dynamic, task
 
 from flytekitplugins.sleep import Sleep
 
-HERE = os.path.dirname(os.path.realpath(__file__))
-CONFIG = os.getenv("FLYTE_BENCH_CONFIG", os.path.join(HERE, "config.yaml"))
 PROJECT = os.getenv("FLYTE_BENCH_PROJECT", "flytesnacks")
 DOMAIN = os.getenv("FLYTE_BENCH_DOMAIN", "development")
 MAX_PARALLELISM = int(os.getenv("BENCH_MAX_PARALLELISM", "1000"))
@@ -107,7 +107,8 @@ def parser(description):
 def _remote():
     from flytekit.configuration import Config
     from flytekit.remote import FlyteRemote
-    return FlyteRemote(Config.auto(config_file=CONFIG), default_project=PROJECT, default_domain=DOMAIN)
+    # Config.auto() with no file: FLYTECTL_CONFIG, then ~/.flyte/config.yaml.
+    return FlyteRemote(Config.auto(), default_project=PROJECT, default_domain=DOMAIN)
 
 
 def _pyflyte_launch(script, cli_args):
@@ -118,7 +119,7 @@ def _pyflyte_launch(script, cli_args):
     # --max-parallelism to match the v2 SDK default. flytepropeller defaults to
     # ~25, which throttles wide fan-outs for a reason unrelated to its control
     # plane and would make the comparison unfair.
-    args = ["--config", CONFIG, "run", "--remote",
+    args = ["run", "--remote",
             "--max-parallelism", str(MAX_PARALLELISM),
             "--project", PROJECT, "--domain", DOMAIN, script, "wf", *cli_args]
     res = CliRunner().invoke(pyflyte.main, args)

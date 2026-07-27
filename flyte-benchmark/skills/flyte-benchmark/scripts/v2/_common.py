@@ -5,10 +5,13 @@ orchestration cost) and the submit → poll → `RESULT_JSON:` driver every scri
 ends with. The four scripts next to this file are the benchmarks; this is only
 their plumbing.
 
+The cluster under test comes from the SDK's own config discovery — point
+`FLYTECTL_CONFIG` at a config file, or let it find `./config.yaml`,
+`./.flyte/config.yaml` or `~/.flyte/config.yaml`.
+
 Env:
-  FLYTE_BENCH_CONFIG           config for the cluster under test (default ~/.flyte/config.yaml)
-  FLYTE_BENCH_IMAGE_REGISTRY   registry for the task image      (default ghcr.io/flyteorg)
-  FLYTE_BENCH_IMAGE_NAME       image name                       (default flyte)
+  FLYTE_BENCH_IMAGE_REGISTRY   registry for the task image (default ghcr.io/flyteorg)
+  FLYTE_BENCH_IMAGE_NAME       image name                 (default flyte)
 """
 
 import argparse
@@ -22,8 +25,6 @@ from datetime import timedelta
 import flyte
 from flyte.extras import Sleep
 from flyte.remote import Run
-
-CONFIG = os.getenv("FLYTE_BENCH_CONFIG", os.path.expanduser("~/.flyte/config.yaml"))
 
 # Default to the public ghcr.io/flyteorg/flyte repo: the cluster can already pull
 # it, which avoids the ErrImagePull/401 a fresh private repo gives you.
@@ -109,7 +110,7 @@ def run_bench(workload, fn, params, total_actions, timeout=1800, k=1):
     Failed runs are reported, never relaunched — a retry budget would make two
     clusters incomparable unless both used the same one.
     """
-    flyte.init_from_config(CONFIG)
+    flyte.init_from_config()      # FLYTECTL_CONFIG, ./config.yaml, ~/.flyte/config.yaml, ...
     result = {"workload": workload, "system": "v2", "params": params, "k": k,
               "total_actions": total_actions}
     t0 = time.time()

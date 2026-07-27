@@ -54,7 +54,7 @@ help:
 	@echo "  make report                         summary table + charts from $(RESULTS)"
 	@echo "  make charts                         regenerate the README charts"
 	@echo
-	@echo "Results append to $(RESULTS). Pick the cluster with FLYTE_BENCH_CONFIG."
+	@echo "Results append to $(RESULTS). Pick the cluster with FLYTECTL_CONFIG."
 
 fanout:
 	$(RUN)/fanout.py --n $(N) --sleep $(SLEEP) --timeout $(TIMEOUT) | tee -a $(RESULTS)
