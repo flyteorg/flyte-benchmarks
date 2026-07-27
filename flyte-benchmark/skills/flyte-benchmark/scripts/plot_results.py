@@ -1,11 +1,14 @@
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["matplotlib>=3.7"]
+# ///
 """Summarize + chart collected benchmark results.
 
-Reads a results file where each line is a JSON object emitted by the drivers
-(the `RESULT_JSON:` payload from _runner.py, or a swarm.py result line). Strips
-any `RESULT_JSON:` prefix, so you can just append driver stdout lines.
+Reads a results file where each line is a JSON object emitted by the benchmark
+scripts. Strips any `RESULT_JSON:` prefix, so you can just append their stdout.
 
 Usage:
-  python plot_results.py results.jsonl [--out charts]
+  uv run plot_results.py results.jsonl [--out charts]
 
 Prints a summary table. If matplotlib is installed, also writes:
   <out>_walltime.png  (wall-clock vs scale, one line per workload)
@@ -33,7 +36,7 @@ def load(path):
 def scale_of(r):
     """Best-effort scalar 'scale' for a row, per workload."""
     p = r.get("params", {})
-    for k in ("total_actions", "n_children", "length", "m", "k", "depth"):
+    for k in ("total_actions", "n", "length", "m", "k"):
         if k in r and isinstance(r[k], (int, float)):
             return r[k]
         if k in p and isinstance(p[k], (int, float)):

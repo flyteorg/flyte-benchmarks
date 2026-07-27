@@ -92,122 +92,62 @@ completes all 100 runs.
 
 ## Usage (run it yourself)
 
-Everything lives in `flyte-benchmark/skills/flyte-benchmark/`. Clone and run:
+Eight scripts, four per control plane, one per shape — no venv to build:
 
-```bash
-git clone https://github.com/flyteorg/benchmark
-cd benchmark/flyte-benchmark/skills/flyte-benchmark
+```
+scripts/v2/{fanout,long_chain,concurrency,swarm}.py     Flyte v2 SDK
+scripts/v1/{fanout,long_chain,concurrency,swarm}.py     flytekit
+scripts/{sample_mem.sh,plot_results.py}                 shared
 ```
 
-The workloads are split by control plane — `scripts/v2/` (Flyte v2 SDK) and
-`scripts/v1/` (flytekit) — with `sample_mem.sh` and `plot_results.py` shared
-between them. Each side has its own `requirements.txt` and needs its **own venv**:
-`flyte` and `flytekit` can't be installed together.
+Each script carries its own dependencies in a [PEP 723](https://peps.python.org/pep-0723/)
+header, so `uv run` resolves them on the fly. The two planes take **identical
+flags**, so comparing them is the same command twice:
 
 ```bash
-python -m venv .venv-v2 && source .venv-v2/bin/activate
-pip install -r scripts/v2/requirements.txt       # flyte v2 SDK (+ matplotlib)
-export FLYTE_BENCH_CONFIG=~/.flyte/config.yaml   # <- config for the cluster under test
+git clone https://github.com/flyteorg/benchmark && cd benchmark
+export FLYTE_BENCH_CONFIG=~/.flyte/config.yaml    # <- the cluster under test
+
+uv run flyte-benchmark/skills/flyte-benchmark/scripts/v2/fanout.py --n 1000
+uv run flyte-benchmark/skills/flyte-benchmark/scripts/v1/fanout.py --n 1000
+```
+
+Or through the Makefile, which picks the plane with `V=` and appends every
+`RESULT_JSON:` line to `results.jsonl`:
+
+```bash
+make help                              # all targets + current defaults
+
+make fanout      V=v2 N=6000           # one run, 6,000 parallel leaves
+make fanout      V=v1 N=6000           # ...the same shape on a v1 cluster
+make long_chain  V=v2 L=500
+make concurrency V=v2 M=40000 HOLD=120
+make swarm       V=v2 K=25 N=2000      # 50k actions
+
+make sweep       V=v2                  # fanout + chain + concurrency ranges
+make sweep-swarm V=v2                  # ramp K 2 -> 100 (up to 200k actions)
 ```
 
 Run the **same commands against each cluster** (swap `FLYTE_BENCH_CONFIG`) so the
-comparison is apples-to-apples — same image, driver, and retry budget everywhere.
+comparison is apples-to-apples. For v1, point `scripts/v1/config.yaml` at your
+flyteadmin (or override it with `FLYTE_BENCH_CONFIG`). Failed runs are reported,
+never relaunched — a retry budget makes two clusters incomparable unless both use
+the same one.
 
-### The short way — `make`
+### Peak memory + OOM
 
-The Makefile wraps both planes behind one interface: pick it with `V=v1` or
-`V=v2` and the same knobs work either side, so comparing planes is the same
-command twice.
+Run in a second terminal while a workload executes:
 
 ```bash
-make help                        # all targets + current defaults
-
-make fanout      V=v2 N=6000     # one run, 6,000 parallel leaves
-make fanout      V=v1 N=6000     # ...the same shape on a v1 cluster
-make long_chain  V=v2 L=500
-make concurrency V=v2 M=40000 HOLD=120
-make nested      V=v1 DEPTH=20 WIDTH=5
-make swarm       V=v2 K=25 N=2000
-
-make sweep       V=v2            # the recommended sweep (fanout + chain + concurrency)
-make sweep-swarm V=v2            # ramp K 2 -> 100 (up to 200k actions)
-make mem                         # peak memory + OOM, in a second terminal
-make report                      # summary table + charts from results.jsonl
+make mem                                                          # v2 / OSS flyte-binary pod
+make mem SEL=app.kubernetes.io/name=flytepropeller CONT=flytepropeller   # v1
+# -> PEAK_MEM_MIB=2032 RESTARTS_DELTA=0   (RESTARTS_DELTA>0 => OOMKilled, exit 137)
 ```
 
-Every run appends its `RESULT_JSON:` line to `results.jsonl`. `make install`
-installs the SDK for the selected plane into the currently active venv — v1 and
-v2 still need separate ones. The examples below are the underlying commands, if
-you'd rather drive the scripts directly.
-
-### Example 1 — a quick single shape
+### Summarize + compare
 
 ```bash
-python scripts/v2/_runner.py fanout n_children=1000 sleep_seconds=0
-# -> SUBMITTED fanout url=... name=...
-# -> RESULT_JSON:{"workload":"fanout","wall_seconds":29.1,"phase":"...SUCCEEDED",...}
-```
-
-### Example 2 — the standard sweep (fan-out, long-chain, concurrency)
-
-```bash
-R=scripts/v2/_runner.py
-for N in 1000 6000; do python $R fanout      n_children=$N sleep_seconds=0 | tee -a results.jsonl; done
-for L in 100 500;   do python $R long_chain  length=$L     sleep_seconds=0 | tee -a results.jsonl; done
-for M in 1000 40000;do python $R concurrency m=$M hold_seconds=120         | tee -a results.jsonl; done
-```
-
-### Example 3 — the same shapes on a Flyte v1 cluster
-
-v1 speaks flytekit, not the v2 SDK, so it gets its own scripts and venv. The
-workloads, sweeps and `RESULT_JSON:` output line up with the v2 side.
-
-```bash
-deactivate; python -m venv .venv-v1 && source .venv-v1/bin/activate
-pip install -r scripts/v1/requirements.txt
-$EDITOR scripts/v1/config.yaml            # point admin.endpoint at your flyteadmin
-
-python scripts/v1/_runner.py fanout      --n_children 1000 --sleep_duration 0s
-python scripts/v1/_runner.py long_chain  --length 100      --sleep_duration 0s
-python scripts/v1/_runner.py concurrency --m 1000 --hold_seconds 120
-python scripts/v1/_runner.py nested      --depth 20 --width 5 --sleep_duration 0s
-
-# swarm: K workflows x m held leaves (the v1 counterpart of Example 4)
-python scripts/v1/swarm.py --k 10 --m 1000 --hold_seconds 120
-```
-
-Leaves use the core-sleep plugin here too — no task pods — so both planes are
-measured on orchestration cost alone. Every execution is launched with
-`--max-parallelism 1000` to match the v2 SDK default; flytepropeller's ~25 would
-throttle wide fan-outs for a reason unrelated to its control plane.
-
-### Example 4 — the swarm scale / OOM test
-
-```bash
-# K runs x 2000 leaves = up to 200k actions. This is where a single-pod OSS v2
-# executor OOMs and a horizontally-scaled plane (Union) does not.
-for K in 2 5 10 25 50 100; do
-  python scripts/v2/swarm.py --k $K --n_children 2000 --sleep_seconds 1 --timeout 1800 --max-retries 0 \
-    | tee -a results.jsonl
-done
-```
-
-### Example 5 — capture peak memory + OOM (second terminal, while a run executes)
-
-```bash
-# v2 / OSS single-binary pod:
-NS=flyte SEL='app.kubernetes.io/name=flyte-binary' CONT=flyte scripts/sample_mem.sh 1800
-# v1: sample flytepropeller instead
-NS=flyte SEL='app.kubernetes.io/name=flytepropeller' CONT=flytepropeller scripts/sample_mem.sh 1800
-# -> PEAK_MEM_MIB=2032 RESTARTS_DELTA=0     (RESTARTS_DELTA>0 => OOMKilled, exit 137)
-```
-
-### Example 6 — summarize + chart, then compare
-
-```bash
-python scripts/plot_results.py results.jsonl --out charts
-#   prints a summary table
-#   writes charts_walltime.png and charts_memory.png (if matplotlib installed)
+make report      # summary table, plus charts_walltime.png / charts_memory.png
 ```
 
 Compare your numbers to
@@ -220,29 +160,32 @@ executor OOMs the 200k swarm that Union completes.
 
 ## Recommended sweeps
 
-| shape | sweep |
-|---|---|
-| `fanout` | `n_children` 1000 → 6000 (v1 OOMs a *held* fan-out ~6k; v2 stays flat) |
-| `long_chain` | `length` 100 → 500 |
-| `concurrency` | `m` 1000 → 40000, `hold_seconds=120` |
-| `swarm` | `K` 2 → 100 (× 2000 leaves = up to 200k actions) |
+| shape | flag | sweep |
+|---|---|---|
+| `fanout` | `--n` | 1000 → 6000 (v1 OOMs a *held* fan-out ~6k; v2 stays flat) |
+| `long_chain` | `--length` | 100 → 500 |
+| `concurrency` | `--m` | 1000 → 40000, with `--hold 120` |
+| `swarm` | `--k` | 2 → 100, `--n 2000` (up to 200k actions) |
 
 ---
 
 ## Prerequisites
 
-- Python 3.12 and the Flyte v2 SDK (`pip install -r scripts/v2/requirements.txt`)
-- For the v1 side: a **separate** venv with `pip install -r scripts/v1/requirements.txt`
-  (flytekit + the core-sleep plugin) — flytekit and the v2 SDK can't coexist
-- A Flyte config **per target cluster** (v1, v2-OSS, Union), selected via
-  `FLYTE_BENCH_CONFIG` (default `~/.flyte/config.yaml`; the v1 scripts default to
-  `scripts/v1/config.yaml`)
-- For memory sampling: `kubectl` access to the orchestration pod + `metrics-server`
+- [`uv`](https://docs.astral.sh/uv/) — it installs each script's dependencies
+  (and a Python 3.12) on first run. Nothing else to install; the two SDKs never
+  meet, since each script resolves in its own environment.
+- A Flyte config **per target cluster** (v1, v2-OSS, Union), selected with
+  `FLYTE_BENCH_CONFIG` (default `~/.flyte/config.yaml`; the v1 scripts fall back
+  to `scripts/v1/config.yaml`).
+- For memory sampling: `kubectl` access to the orchestration pod + `metrics-server`.
 
 ## Fairness checklist
 
-- Same task image, driver, and `--max-retries` on every cluster.
+- Same task image and driver on every cluster; no relaunching failed runs.
 - core-sleep leaves (no pods) so node memory never masks the control-plane limit.
+- v1 executions launch with `--max-parallelism 1000` to match the v2 SDK default —
+  flytepropeller's ~25 would throttle wide fan-outs for a reason that has nothing
+  to do with its control plane.
 - Wipe CRDs / let pod memory settle between runs (leftover state inflates the
   informer cache and confounds the next measurement).
 
@@ -260,8 +203,8 @@ benchmark/                                  <- marketplace repo
       reference_results.md                  <- numbers to compare against
       scripts/
         sample_mem.sh, plot_results.py      <- shared by both planes
-        v2/                                 <- workloads + driver, Flyte v2 SDK
-        v1/                                 <- the same workloads on flytekit/v1
+        v2/                                 <- 4 benchmarks (Flyte v2 SDK) + _common.py
+        v1/                                 <- the same 4 on flytekit + config.yaml
 ```
 
 ## License

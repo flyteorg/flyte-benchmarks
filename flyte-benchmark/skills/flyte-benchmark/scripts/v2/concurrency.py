@@ -1,36 +1,33 @@
-"""Workload 2 — steady-state concurrency. Hold M runs simultaneously running.
+# /// script
+# requires-python = ">=3.12,<3.13"
+# dependencies = ["flyte>=2.0.0"]
+# ///
+"""Steady-state concurrency — hold M leaves live for a window.
 
-Keeps M leaves *in-flight* for a sustained window so the control plane
-reconciles them continuously. Watch control-plane CPU/mem, reconcile/queue
-latency, and backing-store load.
+Same fan-out shape as fanout.py, but every leaf sleeps for `--hold` seconds, so
+M actions stay RUNNING at once and the control plane reconciles them
+continuously. This is the shape that finds the memory ceiling.
 
-Sweep M: 500 -> 5000 -> 20000.
+    uv run concurrency.py --m 1000 --hold 120
+    uv run concurrency.py --m 40000 --hold 120
 """
 
-import asyncio
-from datetime import timedelta
+from _common import leaves, parser, run_bench, task_env
 
-import flyte
-
-from _common import image, sleep_env, sleep_leaf
-
-env = flyte.TaskEnvironment(
-    name="bench_concurrency",
-    image=image,
-    resources=flyte.Resources(cpu=(1, 2), memory=("2Gi", "4Gi")),
-    depends_on=[sleep_env],
-)
+env = task_env("bench_concurrency")
 
 
 @env.task
-async def hold(m: int = 5000, hold_seconds: int = 300) -> int:
-    """Hold `m` leaves running for `hold_seconds` — steady-state, not a burst."""
-    print(f"hold m={m} hold_seconds={hold_seconds}", flush=True)
-    await asyncio.gather(*(sleep_leaf(seconds=timedelta(seconds=hold_seconds)) for _ in range(m)))
+async def hold_leaves(m: int = 1000, hold: int = 120) -> int:
+    print(f"hold m={m} hold={hold}", flush=True)
+    await leaves(m, hold)
     return m
 
 
 if __name__ == "__main__":
-    flyte.init_from_config()
-    r = flyte.with_runcontext("remote").run(hold, m=5000, hold_seconds=300)
-    print(r.url)
+    ap = parser("steady-state concurrency: hold M leaves live")
+    ap.add_argument("--m", type=int, default=1000, help="leaves held live")
+    ap.add_argument("--hold", type=int, default=120, help="seconds to hold them")
+    a = ap.parse_args()
+    run_bench("concurrency", hold_leaves, {"m": a.m, "hold": a.hold},
+              total_actions=a.m, timeout=a.timeout)

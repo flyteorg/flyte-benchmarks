@@ -1,35 +1,33 @@
-"""Workload 1 — wide fan-out. One run, N parallel core-sleep leaves.
+# /// script
+# requires-python = ">=3.12,<3.13"
+# dependencies = ["flyte>=2.0.0"]
+# ///
+"""Wide fan-out — one run, N parallel core-sleep leaves.
 
-The single most discriminating v1-vs-v2 test: v1 grows one workflow CRD until it
-hits the etcd/offload limit and reconcile slows quadratically; v2 spreads the
-work across per-task-action CRDs.
+The most discriminating shape between the two planes: v1 grows one workflow CRD
+until it hits the etcd/offload limit and reconcile slows down; v2 spreads the
+same work over per-action CRDs.
 
-Sweep n_children: 1000 -> 5000 -> 10000 -> 50000.
+    uv run fanout.py --n 1000
+    uv run fanout.py --n 6000
 """
 
-import asyncio
-from datetime import timedelta
+from _common import leaves, parser, run_bench, task_env
 
-import flyte
-
-from _common import image, sleep_env, sleep_leaf
-
-fanout_env = flyte.TaskEnvironment(
-    name="bench_fanout",
-    image=image,
-    resources=flyte.Resources(cpu=(1, 2), memory=("2Gi", "4Gi")),
-    depends_on=[sleep_env],
-)
+env = task_env("bench_fanout")
 
 
-@fanout_env.task
-async def fanout(n_children: int = 5000, sleep_seconds: int = 0) -> int:
-    print(f"fanout n_children={n_children} sleep_seconds={sleep_seconds}", flush=True)
-    await asyncio.gather(*(sleep_leaf(seconds=timedelta(seconds=sleep_seconds)) for _ in range(n_children)))
-    return n_children
+@env.task
+async def fanout(n: int = 1000, sleep: int = 0) -> int:
+    print(f"fanout n={n} sleep={sleep}", flush=True)
+    await leaves(n, sleep)
+    return n
 
 
 if __name__ == "__main__":
-    flyte.init_from_config()
-    r = flyte.with_runcontext("remote").run(fanout, n_children=5000, sleep_seconds=0)
-    print(r.url)
+    ap = parser("wide fan-out: one run, N parallel leaves")
+    ap.add_argument("--n", type=int, default=1000, help="leaves in the run")
+    ap.add_argument("--sleep", type=int, default=0, help="seconds each leaf sleeps")
+    a = ap.parse_args()
+    run_bench("fanout", fanout, {"n": a.n, "sleep": a.sleep},
+              total_actions=a.n, timeout=a.timeout)

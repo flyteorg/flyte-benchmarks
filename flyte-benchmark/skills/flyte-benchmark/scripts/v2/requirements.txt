@@ -1,4 +1,0 @@
-# Flyte v2 SDK — provides `flyte`, `flyte.remote`, `flyte.extras.Sleep` (core-sleep leaf plugin)
-flyte>=2.0.0
-# optional: charts in plot_results.py
-matplotlib>=3.7

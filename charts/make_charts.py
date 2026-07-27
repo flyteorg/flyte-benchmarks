@@ -1,6 +1,10 @@
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["matplotlib>=3.7"]
+# ///
 """Regenerate the README charts from the measured numbers.
 
-    python charts/make_charts.py     # writes charts/*.png
+    uv run charts/make_charts.py     # writes charts/*.png
 
 Every value below is a measurement from the runs recorded in
 `flyte-benchmark/skills/flyte-benchmark/reference_results.md` — core-sleep leaves

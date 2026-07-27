@@ -1,35 +1,36 @@
-"""Workload 4 — long sequential DAG. Hundreds of nodes in one run, in series.
+# /// script
+# requires-python = ">=3.12,<3.13"
+# dependencies = ["flyte>=2.0.0"]
+# ///
+"""Long chain — N nodes in one run, in series.
 
-Sequential (not parallel) so node state accumulates over many transitions in a
-single execution. Tests CRD accretion + offload behavior over time — v1's
-workflow CRD grows with every completed node.
+Leaves are awaited one at a time, so node state accumulates over many
+transitions. Runtime is length × per-transition latency: this is the shape where
+a scaled-out control plane has nothing to parallelize.
 
-Sweep length: 100 -> 500.
+    uv run long_chain.py --length 100
+    uv run long_chain.py --length 500
 """
 
 from datetime import timedelta
 
-import flyte
+from _common import parser, run_bench, sleep_leaf, task_env
 
-from _common import image, sleep_env, sleep_leaf
-
-env = flyte.TaskEnvironment(
-    name="bench_long_chain",
-    image=image,
-    resources=flyte.Resources(cpu=1, memory="1Gi"),
-    depends_on=[sleep_env],
-)
+env = task_env("bench_long_chain")
 
 
 @env.task
-async def chain(length: int = 100, sleep_seconds: int = 0) -> int:
+async def chain(length: int = 100, sleep: int = 0) -> int:
     print(f"chain length={length}", flush=True)
-    for i in range(length):
-        await sleep_leaf(seconds=timedelta(seconds=sleep_seconds))  # awaited in series, one node at a time
+    for _ in range(length):
+        await sleep_leaf(seconds=timedelta(seconds=sleep))   # awaited in series
     return length
 
 
 if __name__ == "__main__":
-    flyte.init_from_config()
-    r = flyte.with_runcontext("remote").run(chain, length=100, sleep_seconds=0)
-    print(r.url)
+    ap = parser("long chain: N nodes in series")
+    ap.add_argument("--length", type=int, default=100, help="nodes in the chain")
+    ap.add_argument("--sleep", type=int, default=0, help="seconds each node sleeps")
+    a = ap.parse_args()
+    run_bench("long_chain", chain, {"length": a.length, "sleep": a.sleep},
+              total_actions=a.length, timeout=a.timeout)
