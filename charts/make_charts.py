@@ -80,110 +80,99 @@ def concurrency():
     print("wrote charts/concurrency.png")
 
 
-def single_workflow():
-    """v1 vs v2 on single-run shapes — where v1's one-CRD-per-run design shows up."""
-    fig, ax = plt.subplots(1, 2, figsize=(9.6, 4.0))
-
-    a = ax[0]                                       # fan-out runtime
-    bars(a, ["1k", "2k", "3k", "4k", "5k", "6k"],
-         [("Flyte v1", [124, 213, 350, 444, 579, 717], V1),
-          ("Flyte v2", [29, 40, 55, 84, 100, 115], V2)], label_size=7.5)
-    a.set_title("Wide fan-out — runtime", fontweight="bold")
-    a.set_xlabel("Leaves in one run")
-    a.set_ylabel("Wall-clock (s)")
-    a.set_ylim(0, 830)
-    a.annotate("v2 is 4–6× faster\nacross the range", (-0.4, 540), fontsize=9,
-               color=V2, fontweight="bold", ha="left", va="top")
-    a.legend(frameon=False, loc="upper left")
-
-    b = ax[1]                                       # long-chain memory
-    bars(b, ["100", "300", "500"],
-         [("Flyte v1", [1272, 1410, 1589], V1),
-          ("Flyte v2", [298, 317, 327], V2)])
-    b.set_title("Long chain — control-plane memory", fontweight="bold")
-    b.set_xlabel("Chain length (nodes)")
-    b.set_ylabel("Peak memory (MiB)")
-    b.set_ylim(0, 1850)
-    b.legend(frameon=False, loc="upper left")
-
-    fig.suptitle("Single-run shapes: v1 holds the whole run in one workflow CRD; "
-                 "v2 splits it into per-action CRDs", fontsize=9.5, color="#555", y=1.02)
-    fig.tight_layout()
-    fig.savefig("charts/single_workflow.png", dpi=150, bbox_inches="tight")
-    print("wrote charts/single_workflow.png")
-
-
-def oss_vs_union():
-    """OSS v2 vs Union on the two single-run shapes, re-run on the same day.
-
-    Newer builds than the v1-vs-v2 numbers in single_workflow() — don't read the
-    two figures against each other.
-    """
-    fig, ax = plt.subplots(1, 2, figsize=(9.8, 4.2))
-
-    a = ax[0]                                       # fan-out runtime
-    bars(a, ["1k", "3k", "6k"],
-         [("Flyte v2 (OSS)", [68.4, 144.2, 355.6], V2),
+def fanout():
+    """Wide fan-out on all three planes, re-run 2026-07-27 (same driver, same day)."""
+    fig, ax = plt.subplots(figsize=(8.0, 4.6))
+    bars(ax, ["1k", "3k", "6k"],
+         [("Flyte v1 (OSS)", [126.3, 371.8, 699.1], V1),
+          ("Flyte v2 (OSS)", [68.4, 144.2, 355.6], V2),
           ("Union (v2)", [19.0, 39.0, 68.6], UN)], fmt="{:.0f} s")
-    for i, (o, u) in enumerate([(68.4, 19.0), (144.2, 39.0), (355.6, 68.6)]):
-        a.annotate(f"{o / u:.1f}× faster", (i - 0.2, o), textcoords="offset points",
-                   xytext=(0, 17), ha="center", fontsize=8.5, color="#8a6d00",
-                   fontweight="bold")
-    a.set_title("Wide fan-out — thousands of actions at once", fontweight="bold")
-    a.set_xlabel("Leaves in one run")
-    a.set_ylabel("Execution time (s)")
-    a.set_ylim(0, 440)
-    a.legend(frameon=False, loc="upper left")
+    for i, (v1, un) in enumerate([(126.3, 19.0), (371.8, 39.0), (699.1, 68.6)]):
+        ax.annotate(f"Union {v1 / un:.1f}× v1", (i, v1), textcoords="offset points",
+                    xytext=(0, 18), ha="center", fontsize=8.5, color="#8a6d00",
+                    fontweight="bold")
 
-    b = ax[1]                                       # long-chain runtime
-    bars(b, ["100", "300", "500"],
-         [("Flyte v2 (OSS)", [18.9, 53.4, 83.5], V2),
-          ("Union (v2)", [19.0, 53.5, 83.7], UN)], fmt="{:.1f} s")
-    b.annotate("within 0.2 s\nat every length", (1, 53.5), textcoords="offset points",
-               xytext=(0, 26), ha="center", fontsize=8.5, color="#555", fontweight="bold")
-    b.set_title("Long chain — one action at a time", fontweight="bold")
-    b.set_xlabel("Chain length (nodes)")
-    b.set_ylabel("Execution time (s)")
-    b.set_ylim(0, 105)
-    b.legend(frameon=False, loc="upper left")
-
-    fig.suptitle("Same-day OSS v2 vs Union: scale-out pays where actions run concurrently, "
-                 "and not where they can't", fontsize=9.5, color="#555", y=1.02)
+    ax.set_xlabel("Leaves in one run")
+    ax.set_ylabel("Execution time (s)")
+    ax.set_title("Wide fan-out — thousands of actions live at once", fontsize=12)
+    ax.set_ylim(0, 830)
+    ax.legend(loc="upper left", frameon=False, fontsize=10.5)
     fig.tight_layout()
-    fig.savefig("charts/oss_vs_union.png", dpi=150, bbox_inches="tight")
-    print("wrote charts/oss_vs_union.png")
+    fig.savefig("charts/fanout.png", dpi=150)
+    print("wrote charts/fanout.png")
+
+
+def long_chain():
+    """Long chain on all three planes, re-run 2026-07-27 (same driver, same day)."""
+    fig, ax = plt.subplots(figsize=(8.0, 4.6))
+    bars(ax, ["100", "300", "500"],
+         [("Flyte v1 (OSS)", [65.7, 202.8, 366.1], V1),
+          ("Flyte v2 (OSS)", [18.9, 53.4, 83.5], V2),
+          ("Union (v2)", [19.0, 53.5, 83.7], UN)], fmt="{:.1f} s", label_size=8)
+
+    ax.annotate("v2 and Union land within 0.2 s at every length: a chain runs one\n"
+                "action at a time, so scaling the plane out has nothing to work with.\n"
+                "The v1 gap is per-transition latency, not parallelism.",
+                xy=(-0.42, 385), fontsize=9, color="#555", va="top")
+
+    ax.set_xlabel("Chain length (nodes)")
+    ax.set_ylabel("Execution time (s)")
+    ax.set_title("Long chain — one action at a time", fontsize=12)
+    ax.set_ylim(0, 430)
+    ax.legend(loc="upper right", frameon=False, fontsize=10.5)
+    fig.tight_layout()
+    fig.savefig("charts/long_chain.png", dpi=150)
+    print("wrote charts/long_chain.png")
 
 
 def swarm():
-    """The scale test: K independent runs x 2,000 leaves, up to 200k actions."""
+    """K independent runs x 2,000 leaves.
+
+    Left: all three planes at the same scale, same day. Right: how far each OSS
+    plane gets before it dies — the June ramp, where v1 was never run (a v1 swarm
+    took 326 s at 10k actions; the 200k point would run for hours).
+    """
+    fig, ax = plt.subplots(1, 2, figsize=(11.0, 4.4),
+                           gridspec_kw={"width_ratios": [1, 1.5]})
+
+    a = ax[0]                                       # same-day, three planes
+    bars(a, ["4k", "10k"],
+         [("Flyte v1 (OSS)", [300.8, 325.6], V1),
+          ("Flyte v2 (OSS)", [69.2, 168.8], V2),
+          ("Union (v2)", [54.1, 71.3], UN)], fmt="{:.0f} s")
+    a.set_title("Same day, all three planes", fontweight="bold")
+    a.set_xlabel("Total actions in flight")
+    a.set_ylabel("Execution time (s)")
+    a.set_ylim(0, 400)
+    a.legend(loc="upper left", frameon=False, fontsize=9.5)
+
+    b = ax[1]                                       # the scale ceiling (June build)
     cats = ["4k", "10k", "20k", "50k", "100k", "200k"]
-    oss = [102, 229, 440, 1333, 3617, None]         # OOM-killed at 200k
-    un = [59, 123, 185, 418, 772, 1533]
+    x, _ = bars(b, cats, [("Flyte v2 (OSS, one 8 GiB pod)", [102, 229, 440, 1333, 3617, None], V2),
+                          ("Union (v2, scaled out)", [59, 123, 185, 418, 772, 1533], UN)],
+                label_size=8)
+    oom_marker(b, x[5] - 0.2)
+    b.annotate("OSS is OOM-killed at 200k — peak 8.1 GiB. Executor memory\n"
+               "tracks CUMULATIVE actions (~54 MiB / 1,000), so it has no bar here.",
+               xy=(x[5] - 0.25, 250), xytext=(x[0] - 0.35, 3150), fontsize=8.5,
+               color=BAD, fontweight="bold", ha="left", va="top",
+               arrowprops=dict(arrowstyle="->", color=BAD, lw=.8,
+                               connectionstyle="arc3,rad=-0.25"))
+    b.set_title("The scale ceiling (earlier build; v1 not run at this scale)",
+                fontweight="bold")
+    b.set_xlabel("Total actions in flight")
+    b.set_ylabel("Wall-clock runtime (s)")
+    b.set_ylim(0, 4100)
+    b.legend(loc="upper left", frameon=False, fontsize=9.5)
 
-    fig, ax = plt.subplots(figsize=(8.6, 4.6))
-    x, _ = bars(ax, cats, [("Flyte v2 (OSS, one 8 GiB pod)", oss, V2),
-                           ("Union (v2, scaled out)", un, UN)])
-
-    oom_marker(ax, x[5] - 0.2)
-    ax.annotate("OSS is OOM-killed at 200k — peak 8.1 GiB. Executor memory\n"
-                "tracks CUMULATIVE actions (~54 MiB / 1,000), so it has no bar here.",
-                xy=(x[5] - 0.25, 250), xytext=(x[0] - 0.35, 3150), fontsize=8.5,
-                color=BAD, fontweight="bold", ha="left", va="top",
-                arrowprops=dict(arrowstyle="->", color=BAD, lw=.8,
-                                connectionstyle="arc3,rad=-0.25"))
-
-    ax.set_xlabel("Total actions in flight")
-    ax.set_ylabel("Wall-clock runtime (s)")
-    ax.set_title("Swarm scale test — K runs × 2,000 leaves", fontsize=12)
-    ax.set_ylim(0, 4100)
-    ax.legend(loc="upper left", frameon=False, fontsize=10.5)
+    fig.suptitle("Swarm — K independent runs × 2,000 leaves", fontsize=12, y=1.03)
     fig.tight_layout()
-    fig.savefig("charts/swarm.png", dpi=150)
+    fig.savefig("charts/swarm.png", dpi=150, bbox_inches="tight")
     print("wrote charts/swarm.png")
 
 
 if __name__ == "__main__":
     concurrency()
-    single_workflow()
-    oss_vs_union()
+    fanout()
+    long_chain()
     swarm()

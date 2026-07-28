@@ -20,6 +20,16 @@ OSS executor memory tracks *cumulative* actions at ~54 MiB / 1,000 (~55 KB/objec
 and OOMs an 8 GiB pod near ~150k cumulative actions. Union keeps action state in
 ScyllaDB and completes 200k.
 
+### All three planes at the low end, same day (2026-07-27)
+
+v1 was never run at the scales above — it took 326 s for 10k actions here, so the
+200k point would run for hours. At a scale all three planes handle:
+
+| total actions | Flyte v1 | Flyte v2 (OSS) | Union |
+|---|---|---|---|
+| 4,000  | 300.8 s | 69.2 s  | 54.1 s |
+| 10,000 | 325.6 s | 168.8 s | 71.3 s |
+
 ## Wide fan-out — one run, N leaves, 0 s sleep
 
 | leaves | Flyte v1 | Flyte v2 |
@@ -29,20 +39,21 @@ ScyllaDB and completes 200k.
 
 Under *held* leaves (120 s), v1 OOMs its single CRD at ~6,000 held; v2 stays flat.
 
-### Union on the same shape (2026-07-27 re-run)
+### All three planes, same day (2026-07-27 re-run)
 
-Execution seconds (submit excluded), same driver and day on both clusters. Unlike
-the long chain below, a fan-out has thousands of actions live at once, so the
-scaled-out plane has something to parallelize — and does:
+Execution seconds (submit excluded), same driver, all three clusters on one day.
+A fan-out has thousands of actions live at once, so the scaled-out plane has
+something to parallelize — and does:
 
-| leaves | Flyte v2 (OSS) | Union | speed-up |
-|---|---|---|---|
-| 1,000 | 68.4 s | 19.0 s | 3.6× |
-| 3,000 | 144.2 s | 39.0 s | 3.7× |
-| 6,000 | 355.6 s | 68.6 s | 5.2× |
+| leaves | Flyte v1 | Flyte v2 (OSS) | Union | Union vs v1 |
+|---|---|---|---|---|
+| 1,000 | 126.3 s | 68.4 s | 19.0 s | 6.6× |
+| 3,000 | 371.8 s | 144.2 s | 39.0 s | 9.5× |
+| 6,000 | 699.1 s | 355.6 s | 68.6 s | 10.2× |
 
-These are newer builds than the v1-vs-v2 rows above and the OSS side is markedly
-slower than it was there (115 s at 6,000); read the two tables separately.
+v1 reproduces its older numbers closely (699 s vs 717 s at 6,000), but this v2
+build is much slower than the one above (356 s vs 115 s) — so compare within a
+table, not across them.
 
 ## Long chain — N nodes in series, 0 s sleep
 
@@ -54,7 +65,7 @@ slower than it was there (115 s at 6,000); read the two tables separately.
 Peak control-plane memory over the sweep: v1 1,272 → 1,589 MiB (grows with the
 run); v2 flat at 298 → 327 MiB.
 
-### Union on the same shape (2026-07-24 re-run)
+### All three planes, same day (2026-07-24 / 07-27 re-run)
 
 Union and a single-pod OSS v2 are **indistinguishable** here — a chain executes
 one action at a time, so a scaled-out plane has nothing to parallelize. Wall-clock
@@ -64,11 +75,14 @@ shapes (swarm, held concurrency), not this one.
 
 Execution seconds (submit excluded), same driver and day on both clusters:
 
-| length | Flyte v2 (OSS) | Union | per-node |
-|---|---|---|---|
-| 100 | 18.9 s | 19.0 s | ~0.19 s |
-| 300 | 53.4 s | 53.5 s | ~0.18 s |
-| 500 | 83.5 / 83.6 s | 83.7 s | ~0.17 s |
+| length | Flyte v1 | Flyte v2 (OSS) | Union | v2/Union per-node |
+|---|---|---|---|---|
+| 100 | 65.7 s | 18.9 s | 19.0 s | ~0.19 s |
+| 300 | 202.8 s | 53.4 s | 53.5 s | ~0.18 s |
+| 500 | 366.1 s | 83.5 / 83.6 s | 83.7 s | ~0.17 s |
+
+(v1 measured 2026-07-27, v2/Union 2026-07-24; v2 re-measured 18.9 s at length 100
+on the 27th, so the two days agree.)
 
 OSS executor over the whole sweep (1,900 actions, 8 GiB pod): peak **331 MiB**,
 0 restarts — matching the 327 MiB above. Union's control plane is hosted and

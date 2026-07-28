@@ -49,45 +49,50 @@ so you measure *orchestration* cost, not pod startup.
 | `swarm` | K independent fan-out runs at once — the scale / OOM test |
 
 Metrics: end-to-end **wall-clock** (from the driver) and **peak memory + OOM** of
-the orchestration pod (from `sample_mem.sh`).
+the orchestration pod (via `kubectl top`).
 
 ---
 
 ## Results at a glance
 
-Measured runs — identical 8 GiB orchestration pods for Flyte v1 and Flyte v2
-(OSS), core-sleep leaves, same driver everywhere. Full tables in
+Every figure below shows all three planes — **Flyte v1**, **Flyte v2 (OSS)** and
+**Union** — on core-sleep leaves with the same driver. The fan-out, long-chain
+and low-end swarm numbers were re-measured on one day so the planes are directly
+comparable; the concurrency and high-scale swarm numbers are from an earlier
+build and are labelled as such. Full tables in
 [`reference_results.md`](flyte-benchmark/skills/flyte-benchmark/reference_results.md);
-regenerate the charts with `uv run charts/make_charts.py`.
+regenerate with `uv run charts/make_charts.py`.
 
-**Steady-state concurrency** — the one shape run on all three planes. v2 is
-1.2–1.7× faster than v1 across the range; both OSS planes are bounded by a single
-pod's memory, and the OSS v2 executor is OOM-killed at ~60k held tasks (no bar —
-the run never finished). Union runs the same v2 plane scaled out and reaches 80k.
+**Wide fan-out** — thousands of actions live at once, so a scaled-out plane has
+something to parallelize: Union finishes a 6,000-leaf run 10× faster than v1 and
+5× faster than a single-pod v2.
 
-![Concurrency runtime — Flyte v1 vs Flyte v2 (OSS) vs Union](charts/concurrency.png)
+![Wide fan-out — v1 vs v2 vs Union](charts/fanout.png)
 
-**Single-run shapes** — v1 keeps the whole run in one workflow CRD, so a single
-reconcile loop churns it on every tick and its footprint grows with the run. v2
-splits the run into per-action CRDs: ~6× faster on a wide fan-out and flat memory
-down a long chain.
+**Long chain** — the counter-example. One action at a time means nothing to
+parallelize: v2 and Union land within 0.2 s of each other at every length, while
+v1 pays ~4× on per-transition latency alone.
 
-![Fan-out runtime and long-chain memory — v1 vs v2](charts/single_workflow.png)
+![Long chain — v1 vs v2 vs Union](charts/long_chain.png)
 
-**Same-day OSS v2 vs Union** — the two single-run shapes, both planes measured on
-the same day with the same driver. A fan-out has thousands of actions live at
-once, so scaling the plane out pays: Union is 3.6–5.2× faster. A chain runs one
-action at a time, so it can't: the two land within 0.2 s at every length. Same
-comparison, opposite answers — which is the point.
+**Steady-state concurrency** — v2 is 1.2–1.7× faster than v1 across the range.
+Both OSS planes are bounded by a single pod's memory: the v2 executor is
+OOM-killed at ~60k held tasks (no bar — the run never finished), while Union runs
+the same v2 plane scaled out and reaches 80k.
 
-![Fan-out and long chain — OSS v2 vs Union](charts/oss_vs_union.png)
+![Concurrency — v1 vs v2 vs Union](charts/concurrency.png)
 
-**Swarm scale test** — K independent runs × 2,000 leaves. OSS executor memory
-tracks *cumulative* actions (~54 MiB per 1,000), so an 8 GiB pod dies around 150k
-and the 200k run has no bar — it never finished. Union holds action state in a distributed store and
-completes all 100 runs.
+**Swarm** — K independent runs at once. All three planes at a scale they all
+handle (left), and how far the OSS plane gets before it dies (right): executor
+memory tracks *cumulative* actions at ~54 MiB per 1,000, so an 8 GiB pod is
+OOM-killed near 150k and the 200k run never finished. Union completes all 100.
 
-![Swarm scale test — OSS v2 vs Union](charts/swarm.png)
+![Swarm — v1 vs v2 vs Union, and the scale ceiling](charts/swarm.png)
+
+Peak control-plane memory is the other half of the story: down a 500-node chain
+v1 grows 1,272 → 1,589 MiB while v2 stays flat at 298 → 327 MiB. Union's plane is
+hosted and multi-tenant, so a pod-RSS number there isn't comparable and is not
+reported.
 
 ---
 
@@ -99,7 +104,7 @@ to build:
 ```
 v2/{fanout,long_chain,concurrency,swarm}.py     Flyte v2 SDK
 v1/{fanout,long_chain,concurrency,swarm}.py     flytekit
-sample_mem.sh, plot_results.py                  shared
+plot_results.py                                 shared
 ```
 
 Each script carries its own dependencies in a [PEP 723](https://peps.python.org/pep-0723/)
@@ -141,13 +146,17 @@ the same one.
 
 ### Peak memory + OOM
 
-Run in a second terminal while a workload executes:
+Wall-clock is only half the story — the other half is what the orchestration pod
+does to its memory limit. Watch it while a workload runs:
 
 ```bash
-NS=flyte SEL=app.kubernetes.io/name=flyte-binary CONT=flyte ./sample_mem.sh 1800          # v2 / OSS
-NS=flyte SEL=app.kubernetes.io/name=flytepropeller CONT=flytepropeller ./sample_mem.sh 1800  # v1
-# -> PEAK_MEM_MIB=2032 RESTARTS_DELTA=0   (RESTARTS_DELTA>0 => OOMKilled, exit 137)
+kubectl -n flyte top pod -l app.kubernetes.io/name=flyte-binary --containers
+kubectl -n flyte get pod -l app.kubernetes.io/name=flyte-binary \
+  -o jsonpath='{.items[*].status.containerStatuses[*].restartCount}'
 ```
+
+A restart count that goes up mid-run means the pod was OOM-killed (exit 137) —
+which is a result, not a failed measurement: it locates the ceiling.
 
 ### Summarize + compare
 
@@ -203,7 +212,7 @@ executor OOMs the 200k swarm that Union completes.
 benchmark/
   v1/                                       <- 4 benchmarks on flytekit + _common.py
   v2/                                       <- the same 4 on the Flyte v2 SDK
-  sample_mem.sh, plot_results.py            <- shared by both planes
+  plot_results.py                           <- summary table + charts
   charts/                                   <- README charts + make_charts.py
   .claude-plugin/marketplace.json           <- marketplace catalog
   flyte-benchmark/                          <- the plugin

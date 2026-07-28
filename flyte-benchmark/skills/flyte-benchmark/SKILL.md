@@ -28,10 +28,10 @@ so you measure *orchestration* cost, not pod startup.
 
 Each shape exists twice: `v2/` (Flyte v2 SDK) and `v1/`
 (flytekit + flytepropeller), taking **identical flags** and printing the same
-`RESULT_JSON:` line. `sample_mem.sh` and `plot_results.py` are shared.
+`RESULT_JSON:` line. `plot_results.py` is shared.
 
 Metrics: end-to-end **wall-clock** (from the driver) and **peak memory + OOM** of
-the orchestration pod (from `sample_mem.sh`).
+the orchestration pod (via `kubectl top`).
 
 ## Prerequisites
 
@@ -79,14 +79,13 @@ launched with `--max-parallelism 1000` to match the v2 SDK default —
 flytepropeller's ~25 would throttle wide fan-outs for a reason unrelated to its
 control plane (`BENCH_MAX_PARALLELISM` to change it).
 
-Memory + OOM (run in a second terminal *while a workload executes*):
+Memory + OOM: watch the orchestration pod while a workload runs. A restart
+count that goes up mid-run means it was OOM-killed (exit 137) — that locates the
+ceiling, so record it as a result rather than retrying.
 
 ```bash
-# v2 / OSS single-binary pod:
-NS=flyte SEL='app.kubernetes.io/name=flyte-binary' CONT=flyte ./sample_mem.sh 1800
-# v1: sample flytepropeller
-NS=flyte SEL='app.kubernetes.io/name=flytepropeller' CONT=flytepropeller ./sample_mem.sh 1800
-# prints  PEAK_MEM_MIB=<n> RESTARTS_DELTA=<n>   (RESTARTS_DELTA>0 => OOMKilled, exit 137)
+kubectl -n flyte top pod -l app.kubernetes.io/name=flyte-binary --containers   # v2 / OSS
+kubectl -n flyte top pod -l app.kubernetes.io/name=flytepropeller --containers # v1
 ```
 
 ## Recommended sweeps (match the papers)
