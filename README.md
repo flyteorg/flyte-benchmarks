@@ -62,8 +62,8 @@ regenerate the charts with `uv run charts/make_charts.py` from the repo root.
 
 **Steady-state concurrency** — the one shape run on all three planes. v2 is
 1.2–1.7× faster than v1 across the range; both OSS planes are bounded by a single
-pod's memory, and the OSS v2 executor is OOM-killed at ~60k held tasks. Union runs
-the same v2 plane scaled out and keeps going to 80k.
+pod's memory, and the OSS v2 executor is OOM-killed at ~60k held tasks (no bar —
+the run never finished). Union runs the same v2 plane scaled out and reaches 80k.
 
 ![Concurrency runtime — Flyte v1 vs Flyte v2 (OSS) vs Union](charts/concurrency.png)
 
@@ -82,8 +82,8 @@ scaled-out plane to parallelize — runtime is just length × per-transition lat
 ![Long chain — OSS v2 vs Union, indistinguishable](charts/long_chain.png)
 
 **Swarm scale test** — K independent runs × 2,000 leaves. OSS executor memory
-tracks *cumulative* actions (~54 MiB per 1,000), so an 8 GiB pod dies around 150k;
-the 200k run never finished. Union holds action state in a distributed store and
+tracks *cumulative* actions (~54 MiB per 1,000), so an 8 GiB pod dies around 150k
+and the 200k run has no bar — it never finished. Union holds action state in a distributed store and
 completes all 100 runs.
 
 ![Swarm scale test — OSS v2 vs Union](charts/swarm.png)
