@@ -1,0 +1,19 @@
+{
+  "name": "benchmark",
+  "owner": {
+    "name": "flyteorg",
+    "url": "https://github.com/flyteorg"
+  },
+  "metadata": {
+    "description": "Flyte benchmark plugins — reproducible scaling tests.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "flyte-benchmark",
+      "source": "./flyte-benchmark",
+      "description": "Reproduce Flyte v1 vs v2 (OSS) vs Union scaling benchmarks — fan-out, long-chain, concurrency, and the swarm scale/OOM test.",
+      "version": "0.1.0"
+    }
+  ]
+}
