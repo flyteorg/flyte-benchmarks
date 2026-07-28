@@ -5,7 +5,7 @@
 """Steady-state concurrency — hold M leaves live for a window.
 
 Same fan-out shape as fanout.py, but every leaf sleeps for `--hold` seconds, so
-M actions stay RUNNING at once and the control plane reconciles them
+M actions stay RUNNING at once and the orchestrator reconciles them
 continuously. This is the shape that finds the memory ceiling.
 
     uv run concurrency.py --m 1000 --hold 120

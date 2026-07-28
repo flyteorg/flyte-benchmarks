@@ -1,6 +1,6 @@
 # Reference results
 
-Numbers we measured on identical 8 GiB orchestration pods (core-sleep leaves, no
+Numbers we measured on identical 8 GiB orchestrator pods (core-sleep leaves, no
 task pods). Use these to sanity-check your own runs — exact values depend on
 cluster size, DB, and network, but the *shape* (v2 >> v1; Union clears the
 swarm OSS OOMs on) should reproduce.
@@ -20,10 +20,10 @@ OSS executor memory tracks *cumulative* actions at ~54 MiB / 1,000 (~55 KB/objec
 and OOMs an 8 GiB pod near ~150k cumulative actions. Union keeps action state in
 ScyllaDB and completes 200k.
 
-### All three planes at the low end, same day (2026-07-27)
+### All three at the low end, same day (2026-07-27)
 
 v1 was never run at the scales above — it took 326 s for 10k actions here, so the
-200k point would run for hours. At a scale all three planes handle:
+200k point would run for hours. At a scale all three handle:
 
 | total actions | Flyte v1 | Flyte v2 (OSS) | Union |
 |---|---|---|---|
@@ -39,11 +39,11 @@ v1 was never run at the scales above — it took 326 s for 10k actions here, so 
 
 Under *held* leaves (120 s), v1 OOMs its single CRD at ~6,000 held; v2 stays flat.
 
-### All three planes, same day (2026-07-27 re-run)
+### All three, same day (2026-07-27 re-run)
 
 Execution seconds (submit excluded), same driver, all three clusters on one day.
-A fan-out has thousands of actions live at once, so the scaled-out plane has
-something to parallelize — and does:
+A fan-out has thousands of actions live at once, so the scaled-out orchestrator
+has something to parallelize — and does:
 
 | leaves | Flyte v1 | Flyte v2 (OSS) | Union | Union vs v1 |
 |---|---|---|---|---|
@@ -62,13 +62,13 @@ table, not across them.
 | 100 | 74 s | 16 s |
 | 500 | 365 s | 56 s |
 
-Peak control-plane memory over the sweep: v1 1,272 → 1,589 MiB (grows with the
+Peak orchestrator memory over the sweep: v1 1,272 → 1,589 MiB (grows with the
 run); v2 flat at 298 → 327 MiB.
 
-### All three planes, same day (2026-07-24 / 07-27 re-run)
+### All three, same day (2026-07-24 / 07-27 re-run)
 
 Union and a single-pod OSS v2 are **indistinguishable** here — a chain executes
-one action at a time, so a scaled-out plane has nothing to parallelize. Wall-clock
+one action at a time, so scaling the orchestrator out has nothing to work with. Wall-clock
 is `length × per-transition latency`, the same runs-service → executor →
 runs-service round trip in both. Union's advantage shows up in the concurrent
 shapes (swarm, held concurrency), not this one.
@@ -85,10 +85,10 @@ Execution seconds (submit excluded), same driver and day on both clusters:
 on the 27th, so the two days agree.)
 
 OSS executor over the whole sweep (1,900 actions, 8 GiB pod): peak **331 MiB**,
-0 restarts — matching the 327 MiB above. Union's control plane is hosted and
+0 restarts — matching the 327 MiB above. Union's orchestrator is hosted and
 multi-tenant, so a pod-RSS number there isn't comparable and was not taken.
 
-Note both planes ran ~0.167 s/node here versus ~0.11 s/node in the v1-vs-v2 rows
+Note both v2 and Union ran ~0.167 s/node here versus ~0.11 s/node in the v1-vs-v2 rows
 above (56 s at length=500), on newer builds. Two independent clusters landing
 within 0.2 s of each other points at the per-transition path rather than cluster
 noise; treat the older long-chain wall-clocks as build-specific.
@@ -102,6 +102,8 @@ noise; treat the older long-chain wall-clocks as build-specific.
 | 20,000 | —       | —     | ~2.0 GiB |
 | 40,000 | 1,016 s | 756 s | ~3.5 GiB |
 
-Headline: v2 runs the common patterns ~4.3–6.5x faster than v1 and removes v1's
-per-run OOM cliff; moving state off the executor's cache (Union/ScyllaDB) removes
-the per-deployment cliff at six-figure action counts.
+Headline: v2 beats v1 on every workload here — ~2× on a fan-out, ~3.5–4.4× on a
+long chain, ~1.2–1.7× on held concurrency in the same-day runs (an earlier v2
+build was faster still, up to 6.5×) — and removes v1's per-run OOM cliff. Moving
+action state off the executor's cache (Union/ScyllaDB) removes the per-deployment
+cliff at six-figure action counts.

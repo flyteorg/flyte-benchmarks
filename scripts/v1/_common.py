@@ -3,7 +3,7 @@
 Holds the core-sleep leaf and fan-out building blocks, plus the register →
 launch → poll → `RESULT_JSON:` driver. The four scripts next to this file are
 the benchmarks; this is only their plumbing. They mirror the v2 scripts flag for
-flag, so the same command line compares planes.
+flag, so the same command line works on either version.
 
 The core-sleep flytekit plugin is not on PyPI yet; it lives on a public fork
 branch, and a prebuilt, anonymously-pullable image already exists.
@@ -119,8 +119,8 @@ def _pyflyte_launch(script, cli_args):
     from flytekit.clis.sdk_in_container import pyflyte
 
     # --max-parallelism to match the v2 SDK default. flytepropeller defaults to
-    # ~25, which throttles wide fan-outs for a reason unrelated to its control
-    # plane and would make the comparison unfair.
+    # ~25, which throttles wide fan-outs for a reason unrelated to how it
+    # orchestrates, and would make the comparison unfair.
     args = ["run", "--remote",
             "--max-parallelism", str(MAX_PARALLELISM),
             "--project", PROJECT, "--domain", DOMAIN, script, "wf", *cli_args]

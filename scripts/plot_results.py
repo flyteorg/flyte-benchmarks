@@ -8,9 +8,9 @@ Reads a results file where each line is a JSON object emitted by the benchmark
 scripts. Strips any `RESULT_JSON:` prefix, so you can just append their stdout.
 
 Usage:
-  uv run plot_results.py results.jsonl [--out charts]
+  uv run scripts/plot_results.py results.jsonl [--out charts]
 
-Prints a summary table. If matplotlib is installed, also writes:
+Prints a summary table and writes:
   <out>_walltime.png  (wall-clock vs scale, one line per workload)
   <out>_memory.png    (peak_mem_mib vs scale, if present)
 """

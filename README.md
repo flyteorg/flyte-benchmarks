@@ -1,8 +1,8 @@
 # benchmark
 
-Reproducible **Flyte control-plane scaling benchmarks**, packaged as a Claude Code
-plugin. Compares **Flyte v1**, **Flyte v2 (OSS)**, and **Union** on the same
-workloads and collects wall-clock, peak memory, and OOM results.
+Reproducible **Flyte scaling benchmarks**, packaged as a Claude Code plugin.
+Compares **Flyte v1**, **Flyte v2 (OSS)**, and **Union** on the same workloads
+and collects wall-clock, peak memory, and OOM results.
 
 This repo is a Claude Code **plugin marketplace** (`benchmark`) hosting one plugin
 (`flyte-benchmark`). You can install it through Claude Code, or just clone the repo
@@ -55,16 +55,16 @@ the orchestration pod (via `kubectl top`).
 
 ## Results at a glance
 
-Every figure below shows all three planes — **Flyte v1**, **Flyte v2 (OSS)** and
+Every figure below covers all three — **Flyte v1**, **Flyte v2 (OSS)** and
 **Union** — on core-sleep leaves with the same driver. The fan-out, long-chain
-and low-end swarm numbers were re-measured on one day so the planes are directly
+and low-end swarm numbers were re-measured on one day so the three are directly
 comparable; the concurrency and high-scale swarm numbers are from an earlier
 build and are labelled as such. Full tables in
 [`reference_results.md`](flyte-benchmark/skills/flyte-benchmark/reference_results.md);
 regenerate with `uv run charts/make_charts.py`.
 
-**Wide fan-out** — thousands of actions live at once, so a scaled-out plane has
-something to parallelize: Union finishes a 6,000-leaf run 10× faster than v1 and
+**Wide fan-out** — thousands of actions live at once, so a scaled-out
+orchestrator has something to parallelize: Union finishes a 6,000-leaf run 10× faster than v1 and
 5× faster than a single-pod v2.
 
 ![Wide fan-out — v1 vs v2 vs Union](charts/fanout.png)
@@ -76,21 +76,21 @@ v1 pays ~4× on per-transition latency alone.
 ![Long chain — v1 vs v2 vs Union](charts/long_chain.png)
 
 **Steady-state concurrency** — v2 is 1.2–1.7× faster than v1 across the range.
-Both OSS planes are bounded by a single pod's memory: the v2 executor is
+Both OSS deployments are bounded by a single pod's memory: the v2 executor is
 OOM-killed at ~60k held tasks (no bar — the run never finished), while Union runs
-the same v2 plane scaled out and reaches 80k.
+the same v2 orchestrator scaled out and reaches 80k.
 
 ![Concurrency — v1 vs v2 vs Union](charts/concurrency.png)
 
-**Swarm** — K independent runs at once. All three planes at a scale they all
-handle (left), and how far the OSS plane gets before it dies (right): executor
+**Swarm** — K independent runs at once. All three at a scale they all handle
+(left), and how far the OSS deployment gets before it dies (right): executor
 memory tracks *cumulative* actions at ~54 MiB per 1,000, so an 8 GiB pod is
 OOM-killed near 150k and the 200k run never finished. Union completes all 100.
 
 ![Swarm — v1 vs v2 vs Union, and the scale ceiling](charts/swarm.png)
 
-Peak control-plane memory is the other half of the story: down a 500-node chain
-v1 grows 1,272 → 1,589 MiB while v2 stays flat at 298 → 327 MiB. Union's plane is
+Peak orchestrator memory is the other half of the story: down a 500-node chain
+v1 grows 1,272 → 1,589 MiB while v2 stays flat at 298 → 327 MiB. Union's orchestrator is
 hosted and multi-tenant, so a pod-RSS number there isn't comparable and is not
 reported.
 
@@ -98,7 +98,7 @@ reported.
 
 ## Usage (run it yourself)
 
-Eight scripts at the repo root, four per control plane, one per shape — no venv
+Eight scripts under `scripts/`, four per Flyte version, one per shape — no venv
 to build:
 
 ```
@@ -109,7 +109,7 @@ scripts/plot_results.py                                 shared
 
 Each script carries its own dependencies in a [PEP 723](https://peps.python.org/pep-0723/)
 header, so `uv run` installs them (and a Python 3.12) on first use. The two
-planes take **identical flags**, so comparing them is the same command twice:
+versions take **identical flags**, so comparing them is the same command twice:
 
 ```bash
 git clone https://github.com/flyteorg/benchmark && cd benchmark
@@ -168,8 +168,10 @@ uv run scripts/plot_results.py results.jsonl --out charts
 Compare your numbers to
 [`reference_results.md`](flyte-benchmark/skills/flyte-benchmark/reference_results.md).
 Absolute values depend on cluster size / DB / network, but the **shape** should
-reproduce: v2 is ~4.3–6.5× faster than v1 with no per-run OOM cliff, and the OSS
-executor OOMs the 200k swarm that Union completes.
+reproduce: v2 beats v1 on every workload (~2× on a fan-out, ~3.5–4.4× on a long
+chain, ~1.2–1.7× on held concurrency in our runs), Union pulls further ahead
+wherever actions run concurrently, and a single-pod OSS executor OOMs the 200k
+swarm that Union completes.
 
 ---
 
@@ -199,10 +201,10 @@ executor OOMs the 200k swarm that Union completes.
 ## Fairness checklist
 
 - Same task image and driver on every cluster; no relaunching failed runs.
-- core-sleep leaves (no pods) so node memory never masks the control-plane limit.
+- core-sleep leaves (no pods) so node memory never masks the orchestrator's limit.
 - v1 executions launch with `--max-parallelism 1000` to match the v2 SDK default —
   flytepropeller's ~25 would throttle wide fan-outs for a reason that has nothing
-  to do with its control plane.
+  to do with how it orchestrates.
 - Wipe CRDs / let pod memory settle between runs (leftover state inflates the
   informer cache and confounds the next measurement).
 

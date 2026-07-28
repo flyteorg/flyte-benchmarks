@@ -6,7 +6,7 @@
 
 The scale / OOM test, and the realistic shape: platforms get loaded by many
 pipelines firing together, not by one pathologically wide run. Ramp K until runs
-fail, submits time out, or the control plane is OOM-killed.
+fail, submits time out, or the orchestrator is OOM-killed.
 
     uv run swarm.py --k 10 --n 2000
     uv run swarm.py --k 100 --n 2000     # 200k actions

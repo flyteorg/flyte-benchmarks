@@ -4,7 +4,7 @@
 # ///
 """Wide fan-out — one run, N parallel core-sleep leaves.
 
-The most discriminating shape between the two planes: v1 grows one workflow CRD
+The most discriminating shape between the two versions: v1 grows one workflow CRD
 until it hits the etcd/offload limit and reconcile slows down; v2 spreads the
 same work over per-action CRDs.
 

@@ -6,7 +6,7 @@
 
 Leaves are awaited one at a time, so node state accumulates over many
 transitions. Runtime is length × per-transition latency: this is the shape where
-a scaled-out control plane has nothing to parallelize.
+a scaled-out orchestrator has nothing to parallelize.
 
     uv run long_chain.py --length 100
     uv run long_chain.py --length 500
