@@ -10,6 +10,8 @@ The cluster under test comes from the SDK's own config discovery — point
 `./.flyte/config.yaml` or `~/.flyte/config.yaml`.
 
 Env:
+  FLYTE_BENCH_PROJECT          project (default flytesnacks)
+  FLYTE_BENCH_DOMAIN           domain  (default development)
   FLYTE_BENCH_IMAGE_REGISTRY   registry for the task image (default ghcr.io/flyteorg)
   FLYTE_BENCH_IMAGE_NAME       image name                 (default flyte)
 """
@@ -25,6 +27,11 @@ from datetime import timedelta
 import flyte
 from flyte.extras import Sleep
 from flyte.remote import Run
+
+# Benchmarks always land in the same project/domain, so results from different
+# clusters stay comparable. These override whatever the config file names.
+PROJECT = os.getenv("FLYTE_BENCH_PROJECT", "flytesnacks")
+DOMAIN = os.getenv("FLYTE_BENCH_DOMAIN", "development")
 
 # Default to the public ghcr.io/flyteorg/flyte repo: the cluster can already pull
 # it, which avoids the ErrImagePull/401 a fresh private repo gives you.
@@ -110,7 +117,8 @@ def run_bench(workload, fn, params, total_actions, timeout=1800, k=1):
     Failed runs are reported, never relaunched — a retry budget would make two
     clusters incomparable unless both used the same one.
     """
-    flyte.init_from_config()      # FLYTECTL_CONFIG, ./config.yaml, ~/.flyte/config.yaml, ...
+    # config discovery: FLYTECTL_CONFIG, ./config.yaml, ~/.flyte/config.yaml, ...
+    flyte.init_from_config(project=PROJECT, domain=DOMAIN)
     result = {"workload": workload, "system": "v2", "params": params, "k": k,
               "total_actions": total_actions}
     t0 = time.time()

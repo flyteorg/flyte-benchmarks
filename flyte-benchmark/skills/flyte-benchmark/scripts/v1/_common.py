@@ -33,6 +33,8 @@ from flytekit import dynamic, task
 
 from flytekitplugins.sleep import Sleep
 
+# Benchmarks always land in the same project/domain, so results from different
+# clusters stay comparable. These override whatever the config file names.
 PROJECT = os.getenv("FLYTE_BENCH_PROJECT", "flytesnacks")
 DOMAIN = os.getenv("FLYTE_BENCH_DOMAIN", "development")
 MAX_PARALLELISM = int(os.getenv("BENCH_MAX_PARALLELISM", "1000"))

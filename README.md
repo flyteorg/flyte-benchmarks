@@ -177,6 +177,8 @@ executor OOMs the 200k swarm that Union completes.
 - A Flyte config **per target cluster** (v1, v2-OSS, Union). Both SDKs discover
   it the usual way: `FLYTECTL_CONFIG`, else `./config.yaml` / `./.flyte/config.yaml`
   (v2 only), else `~/.flyte/config.yaml`.
+- Runs land in **flytesnacks / development** on every cluster, so results stay
+  comparable; override with `FLYTE_BENCH_PROJECT` / `FLYTE_BENCH_DOMAIN`.
 - For memory sampling: `kubectl` access to the orchestration pod + `metrics-server`.
 
 ## Fairness checklist
