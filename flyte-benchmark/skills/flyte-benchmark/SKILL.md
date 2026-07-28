@@ -7,7 +7,7 @@ description: Reproduce the Flyte v1 vs v2 (OSS) vs Union control-plane scaling b
 
 Reproduces the control-plane scaling benchmarks comparing **Flyte v1**, **Flyte v2
 (OSS)**, and **Union**. The benchmarks live at the root of
-[flyteorg/benchmark](https://github.com/flyteorg/benchmark) (`v1/` and `v2/`), so
+[flyteorg/benchmark](https://github.com/flyteorg/benchmark) (`scripts/v1/` and `scripts/v2/`), so
 they can be run by hand or driven from here:
 
 ```bash
@@ -26,9 +26,9 @@ so you measure *orchestration* cost, not pod startup.
 | concurrency | `concurrency.py` | hold M leaves live for a window — steady-state load |
 | swarm | `swarm.py` | K independent fan-out runs at once — the scale / OOM test |
 
-Each shape exists twice: `v2/` (Flyte v2 SDK) and `v1/`
+Each shape exists twice: `scripts/v2/` (Flyte v2 SDK) and `scripts/v1/`
 (flytekit + flytepropeller), taking **identical flags** and printing the same
-`RESULT_JSON:` line. `plot_results.py` is shared.
+`RESULT_JSON:` line. `scripts/plot_results.py` is shared.
 
 Metrics: end-to-end **wall-clock** (from the driver) and **peak memory + OOM** of
 the orchestration pod (via `kubectl top`).
@@ -53,24 +53,24 @@ apples-to-apples — same task image and driver, no relaunching failures.
 ```bash
 export FLYTECTL_CONFIG=~/.flyte/config.yaml       # <- the cluster under test
 
-uv run v2/fanout.py      --n 1000
-uv run v2/long_chain.py  --length 100
-uv run v2/concurrency.py --m 5000 --hold 120
-uv run v2/swarm.py       --k 25 --n 2000     # 50k actions
+uv run scripts/v2/fanout.py      --n 1000
+uv run scripts/v2/long_chain.py  --length 100
+uv run scripts/v2/concurrency.py --m 5000 --hold 120
+uv run scripts/v2/swarm.py       --k 25 --n 2000     # 50k actions
 ```
 
-The v1 scripts take the same flags — swap `v2` for `v1` (with `FLYTECTL_CONFIG`
+The v1 scripts take the same flags — swap `scripts/v2` for `scripts/v1` (with `FLYTECTL_CONFIG`
 pointing at the v1 cluster's config):
 
 ```bash
-uv run v1/fanout.py --n 1000
+uv run scripts/v1/fanout.py --n 1000
 ```
 
 Each prints a `RESULT_JSON:{...}` line; append them to one file (`| tee -a
 results.jsonl`) to chart later, and loop in the shell to sweep:
 
 ```bash
-for l in 100 300 500; do uv run v2/long_chain.py --length $l | tee -a results.jsonl; done
+for l in 100 300 500; do uv run scripts/v2/long_chain.py --length $l | tee -a results.jsonl; done
 ```
 
 Notes that keep v1 comparable: leaves are core-sleep there too (via a prebuilt
@@ -98,7 +98,7 @@ kubectl -n flyte top pod -l app.kubernetes.io/name=flytepropeller --containers #
 ## Collect + compare
 
 ```bash
-uv run plot_results.py results.jsonl --out charts
+uv run scripts/plot_results.py results.jsonl --out charts
 ```
 
 Prints a summary table and writes `charts_walltime.png`

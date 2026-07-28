@@ -102,9 +102,9 @@ Eight scripts at the repo root, four per control plane, one per shape — no ven
 to build:
 
 ```
-v2/{fanout,long_chain,concurrency,swarm}.py     Flyte v2 SDK
-v1/{fanout,long_chain,concurrency,swarm}.py     flytekit
-plot_results.py                                 shared
+scripts/v2/{fanout,long_chain,concurrency,swarm}.py     Flyte v2 SDK
+scripts/v1/{fanout,long_chain,concurrency,swarm}.py     flytekit
+scripts/plot_results.py                                 shared
 ```
 
 Each script carries its own dependencies in a [PEP 723](https://peps.python.org/pep-0723/)
@@ -115,27 +115,27 @@ planes take **identical flags**, so comparing them is the same command twice:
 git clone https://github.com/flyteorg/benchmark && cd benchmark
 export FLYTECTL_CONFIG=~/.flyte/config.yaml    # <- the cluster under test
 
-uv run v2/fanout.py --n 1000                   # Flyte v2
-uv run v1/fanout.py --n 1000                   # ...the same shape on v1
+uv run scripts/v2/fanout.py --n 1000                   # Flyte v2
+uv run scripts/v1/fanout.py --n 1000                   # ...the same shape on v1
 ```
 
 The four shapes, with the knobs worth sweeping:
 
 ```bash
-uv run v2/fanout.py      --n 6000              # one run, 6,000 parallel leaves
-uv run v2/long_chain.py  --length 500          # 500 nodes in series
-uv run v2/concurrency.py --m 40000 --hold 120  # hold 40k leaves live
-uv run v2/swarm.py       --k 25 --n 2000       # 25 concurrent runs = 50k actions
+uv run scripts/v2/fanout.py      --n 6000              # one run, 6,000 parallel leaves
+uv run scripts/v2/long_chain.py  --length 500          # 500 nodes in series
+uv run scripts/v2/concurrency.py --m 40000 --hold 120  # hold 40k leaves live
+uv run scripts/v2/swarm.py       --k 25 --n 2000       # 25 concurrent runs = 50k actions
 ```
 
 Each prints a `RESULT_JSON:{...}` line. Append them to one file to chart later,
 and loop in the shell to sweep:
 
 ```bash
-for n in 1000 2000 3000 4000 5000 6000; do uv run v2/fanout.py --n $n | tee -a results.jsonl; done
-for l in 100 300 500;                    do uv run v2/long_chain.py --length $l | tee -a results.jsonl; done
-for m in 1000 5000 10000 20000 40000;    do uv run v2/concurrency.py --m $m --hold 120 | tee -a results.jsonl; done
-for k in 2 5 10 25 50 100;               do uv run v2/swarm.py --k $k --n 2000 | tee -a results.jsonl; done
+for n in 1000 2000 3000 4000 5000 6000; do uv run scripts/v2/fanout.py --n $n | tee -a results.jsonl; done
+for l in 100 300 500;                    do uv run scripts/v2/long_chain.py --length $l | tee -a results.jsonl; done
+for m in 1000 5000 10000 20000 40000;    do uv run scripts/v2/concurrency.py --m $m --hold 120 | tee -a results.jsonl; done
+for k in 2 5 10 25 50 100;               do uv run scripts/v2/swarm.py --k $k --n 2000 | tee -a results.jsonl; done
 ```
 
 Run the **same commands against each cluster** (swap `FLYTECTL_CONFIG`) so the
@@ -161,7 +161,7 @@ which is a result, not a failed measurement: it locates the ceiling.
 ### Summarize + compare
 
 ```bash
-uv run plot_results.py results.jsonl --out charts
+uv run scripts/plot_results.py results.jsonl --out charts
 # summary table, plus charts_walltime.png and charts_memory.png
 ```
 
@@ -210,9 +210,10 @@ executor OOMs the 200k swarm that Union completes.
 
 ```
 benchmark/
-  v1/                                       <- 4 benchmarks on flytekit + _common.py
-  v2/                                       <- the same 4 on the Flyte v2 SDK
-  plot_results.py                           <- summary table + charts
+  scripts/
+    v1/                                     <- 4 benchmarks on flytekit + _common.py
+    v2/                                     <- the same 4 on the Flyte v2 SDK
+    plot_results.py                         <- summary table + charts
   charts/                                   <- README charts + make_charts.py
   .claude-plugin/marketplace.json           <- marketplace catalog
   flyte-benchmark/                          <- the plugin
@@ -222,8 +223,8 @@ benchmark/
       reference_results.md                  <- numbers to compare against
 ```
 
-The benchmarks sit at the repo root so they can be run directly; the skill is
-instructions for driving them, not a second copy of them.
+The benchmarks sit in `scripts/` so they can be run directly from a clone; the
+skill is instructions for driving them, not a second copy of them.
 
 ## License
 
