@@ -63,9 +63,11 @@ uv run scripts/v1/fanout.py --n 1000
 ```
 
 Each prints a `RESULT_JSON:{...}` line; append them to one file (`| tee -a
-results.jsonl`) to chart later. From a clone of the repo, the Makefile at its
-root wraps all of this: `make fanout V=v1 N=6000`, `make sweep V=v2`,
-`make sweep-swarm V=v2`, `make mem`, `make report` (`make help` lists them).
+results.jsonl`) to chart later, and loop in the shell to sweep:
+
+```bash
+for l in 100 300 500; do uv run scripts/v2/long_chain.py --length $l | tee -a results.jsonl; done
+```
 
 Notes that keep v1 comparable: leaves are core-sleep there too (via a prebuilt
 public image; `FLYTE_BENCH_V1_REGISTRY` builds your own), and every execution is

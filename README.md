@@ -58,7 +58,7 @@ the orchestration pod (from `sample_mem.sh`).
 Measured runs — identical 8 GiB orchestration pods for Flyte v1 and Flyte v2
 (OSS), core-sleep leaves, same driver everywhere. Full tables in
 [`reference_results.md`](flyte-benchmark/skills/flyte-benchmark/reference_results.md);
-regenerate the charts with `make charts`.
+regenerate the charts with `uv run charts/make_charts.py` from the repo root.
 
 **Steady-state concurrency** — the one shape run on all three planes. v2 is
 1.2–1.7× faster than v1 across the range; both OSS planes are bounded by a single
@@ -101,31 +101,35 @@ scripts/{sample_mem.sh,plot_results.py}                 shared
 ```
 
 Each script carries its own dependencies in a [PEP 723](https://peps.python.org/pep-0723/)
-header, so `uv run` resolves them on the fly. The two planes take **identical
-flags**, so comparing them is the same command twice:
+header, so `uv run` installs them (and a Python 3.12) on first use. The two
+planes take **identical flags**, so comparing them is the same command twice:
 
 ```bash
-git clone https://github.com/flyteorg/benchmark && cd benchmark
-export FLYTECTL_CONFIG=~/.flyte/config.yaml       # <- the cluster under test
+git clone https://github.com/flyteorg/benchmark
+cd benchmark/flyte-benchmark/skills/flyte-benchmark/scripts
+export FLYTECTL_CONFIG=~/.flyte/config.yaml    # <- the cluster under test
 
-uv run flyte-benchmark/skills/flyte-benchmark/scripts/v2/fanout.py --n 1000
-uv run flyte-benchmark/skills/flyte-benchmark/scripts/v1/fanout.py --n 1000
+uv run v2/fanout.py --n 1000                   # Flyte v2
+uv run v1/fanout.py --n 1000                   # ...the same shape on v1
 ```
 
-Or through the Makefile, which picks the plane with `V=` and appends every
-`RESULT_JSON:` line to `results.jsonl`:
+The four shapes, with the knobs worth sweeping:
 
 ```bash
-make help                              # all targets + current defaults
+uv run v2/fanout.py      --n 6000              # one run, 6,000 parallel leaves
+uv run v2/long_chain.py  --length 500          # 500 nodes in series
+uv run v2/concurrency.py --m 40000 --hold 120  # hold 40k leaves live
+uv run v2/swarm.py       --k 25 --n 2000       # 25 concurrent runs = 50k actions
+```
 
-make fanout      V=v2 N=6000           # one run, 6,000 parallel leaves
-make fanout      V=v1 N=6000           # ...the same shape on a v1 cluster
-make long_chain  V=v2 L=500
-make concurrency V=v2 M=40000 HOLD=120
-make swarm       V=v2 K=25 N=2000      # 50k actions
+Each prints a `RESULT_JSON:{...}` line. Append them to one file to chart later,
+and loop in the shell to sweep:
 
-make sweep       V=v2                  # fanout + chain + concurrency ranges
-make sweep-swarm V=v2                  # ramp K 2 -> 100 (up to 200k actions)
+```bash
+for n in 1000 2000 3000 4000 5000 6000; do uv run v2/fanout.py --n $n | tee -a ../results.jsonl; done
+for l in 100 300 500;                    do uv run v2/long_chain.py --length $l | tee -a ../results.jsonl; done
+for m in 1000 5000 10000 20000 40000;    do uv run v2/concurrency.py --m $m --hold 120 | tee -a ../results.jsonl; done
+for k in 2 5 10 25 50 100;               do uv run v2/swarm.py --k $k --n 2000 | tee -a ../results.jsonl; done
 ```
 
 Run the **same commands against each cluster** (swap `FLYTECTL_CONFIG`) so the
@@ -139,15 +143,16 @@ the same one.
 Run in a second terminal while a workload executes:
 
 ```bash
-make mem                                                          # v2 / OSS flyte-binary pod
-make mem SEL=app.kubernetes.io/name=flytepropeller CONT=flytepropeller   # v1
+NS=flyte SEL=app.kubernetes.io/name=flyte-binary CONT=flyte ./sample_mem.sh 1800          # v2 / OSS
+NS=flyte SEL=app.kubernetes.io/name=flytepropeller CONT=flytepropeller ./sample_mem.sh 1800  # v1
 # -> PEAK_MEM_MIB=2032 RESTARTS_DELTA=0   (RESTARTS_DELTA>0 => OOMKilled, exit 137)
 ```
 
 ### Summarize + compare
 
 ```bash
-make report      # summary table, plus charts_walltime.png / charts_memory.png
+uv run plot_results.py ../results.jsonl --out ../charts
+# summary table, plus ../charts_walltime.png and ../charts_memory.png
 ```
 
 Compare your numbers to
@@ -195,7 +200,6 @@ executor OOMs the 200k swarm that Union completes.
 
 ```
 benchmark/                                  <- marketplace repo
-  Makefile                                  <- run any shape on either plane
   .claude-plugin/marketplace.json           <- marketplace catalog
   charts/                                   <- README charts + make_charts.py
   flyte-benchmark/                          <- the plugin
