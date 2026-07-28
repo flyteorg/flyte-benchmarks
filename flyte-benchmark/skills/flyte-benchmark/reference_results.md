@@ -29,6 +29,21 @@ ScyllaDB and completes 200k.
 
 Under *held* leaves (120 s), v1 OOMs its single CRD at ~6,000 held; v2 stays flat.
 
+### Union on the same shape (2026-07-27 re-run)
+
+Execution seconds (submit excluded), same driver and day on both clusters. Unlike
+the long chain below, a fan-out has thousands of actions live at once, so the
+scaled-out plane has something to parallelize — and does:
+
+| leaves | Flyte v2 (OSS) | Union | speed-up |
+|---|---|---|---|
+| 1,000 | 68.4 s | 19.0 s | 3.6× |
+| 3,000 | 144.2 s | 39.0 s | 3.7× |
+| 6,000 | 355.6 s | 68.6 s | 5.2× |
+
+These are newer builds than the v1-vs-v2 rows above and the OSS side is markedly
+slower than it was there (115 s at 6,000); read the two tables separately.
+
 ## Long chain — N nodes in series, 0 s sleep
 
 | length | Flyte v1 | Flyte v2 |

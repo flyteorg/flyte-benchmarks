@@ -113,31 +113,45 @@ def single_workflow():
     print("wrote charts/single_workflow.png")
 
 
-def long_chain():
-    """OSS v2 vs Union on a sequential chain (re-run 2026-07-24, same driver/day).
+def oss_vs_union():
+    """OSS v2 vs Union on the two single-run shapes, re-run on the same day.
 
     Newer builds than the v1-vs-v2 numbers in single_workflow() — don't read the
     two figures against each other.
     """
-    fig, ax = plt.subplots(figsize=(7.0, 4.4))
-    bars(ax, ["100", "300", "500"],
+    fig, ax = plt.subplots(1, 2, figsize=(9.8, 4.2))
+
+    a = ax[0]                                       # fan-out runtime
+    bars(a, ["1k", "3k", "6k"],
+         [("Flyte v2 (OSS)", [68.4, 144.2, 355.6], V2),
+          ("Union (v2)", [19.0, 39.0, 68.6], UN)], fmt="{:.0f} s")
+    for i, (o, u) in enumerate([(68.4, 19.0), (144.2, 39.0), (355.6, 68.6)]):
+        a.annotate(f"{o / u:.1f}× faster", (i - 0.2, o), textcoords="offset points",
+                   xytext=(0, 17), ha="center", fontsize=8.5, color="#8a6d00",
+                   fontweight="bold")
+    a.set_title("Wide fan-out — thousands of actions at once", fontweight="bold")
+    a.set_xlabel("Leaves in one run")
+    a.set_ylabel("Execution time (s)")
+    a.set_ylim(0, 440)
+    a.legend(frameon=False, loc="upper left")
+
+    b = ax[1]                                       # long-chain runtime
+    bars(b, ["100", "300", "500"],
          [("Flyte v2 (OSS)", [18.9, 53.4, 83.5], V2),
           ("Union (v2)", [19.0, 53.5, 83.7], UN)], fmt="{:.1f} s")
+    b.annotate("within 0.2 s\nat every length", (1, 53.5), textcoords="offset points",
+               xytext=(0, 26), ha="center", fontsize=8.5, color="#555", fontweight="bold")
+    b.set_title("Long chain — one action at a time", fontweight="bold")
+    b.set_xlabel("Chain length (nodes)")
+    b.set_ylabel("Execution time (s)")
+    b.set_ylim(0, 105)
+    b.legend(frameon=False, loc="upper left")
 
-    ax.annotate("The two planes are within 0.2 s at every length.\n"
-                "A chain runs one action at a time, so a scaled-out\n"
-                "plane has nothing to parallelize: runtime is just\n"
-                "length × per-transition latency (~0.17 s/node).",
-                xy=(-0.42, 62), fontsize=9, color="#555")
-
-    ax.set_xlabel("Chain length (nodes)")
-    ax.set_ylabel("Execution time (s)")
-    ax.set_title("Long chain — where scale-out does NOT help", fontsize=12)
-    ax.set_ylim(0, 100)
-    ax.legend(loc="upper left", frameon=False, fontsize=10.5)
+    fig.suptitle("Same-day OSS v2 vs Union: scale-out pays where actions run concurrently, "
+                 "and not where they can't", fontsize=9.5, color="#555", y=1.02)
     fig.tight_layout()
-    fig.savefig("charts/long_chain.png", dpi=150)
-    print("wrote charts/long_chain.png")
+    fig.savefig("charts/oss_vs_union.png", dpi=150, bbox_inches="tight")
+    print("wrote charts/oss_vs_union.png")
 
 
 def swarm():
@@ -171,5 +185,5 @@ def swarm():
 if __name__ == "__main__":
     concurrency()
     single_workflow()
-    long_chain()
+    oss_vs_union()
     swarm()

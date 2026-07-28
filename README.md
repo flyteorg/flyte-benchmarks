@@ -58,7 +58,7 @@ the orchestration pod (from `sample_mem.sh`).
 Measured runs — identical 8 GiB orchestration pods for Flyte v1 and Flyte v2
 (OSS), core-sleep leaves, same driver everywhere. Full tables in
 [`reference_results.md`](flyte-benchmark/skills/flyte-benchmark/reference_results.md);
-regenerate the charts with `uv run charts/make_charts.py` from the repo root.
+regenerate the charts with `uv run charts/make_charts.py`.
 
 **Steady-state concurrency** — the one shape run on all three planes. v2 is
 1.2–1.7× faster than v1 across the range; both OSS planes are bounded by a single
@@ -74,12 +74,13 @@ down a long chain.
 
 ![Fan-out runtime and long-chain memory — v1 vs v2](charts/single_workflow.png)
 
-**Long chain** — the counter-example, and the reason the shapes above matter.
-Re-run on both an OSS v2 cluster and Union on the same day: every point lands
-within 0.2 s. A chain executes one action at a time, so there is nothing for a
-scaled-out plane to parallelize — runtime is just length × per-transition latency.
+**Same-day OSS v2 vs Union** — the two single-run shapes, both planes measured on
+the same day with the same driver. A fan-out has thousands of actions live at
+once, so scaling the plane out pays: Union is 3.6–5.2× faster. A chain runs one
+action at a time, so it can't: the two land within 0.2 s at every length. Same
+comparison, opposite answers — which is the point.
 
-![Long chain — OSS v2 vs Union, indistinguishable](charts/long_chain.png)
+![Fan-out and long chain — OSS v2 vs Union](charts/oss_vs_union.png)
 
 **Swarm scale test** — K independent runs × 2,000 leaves. OSS executor memory
 tracks *cumulative* actions (~54 MiB per 1,000), so an 8 GiB pod dies around 150k
@@ -92,12 +93,13 @@ completes all 100 runs.
 
 ## Usage (run it yourself)
 
-Eight scripts, four per control plane, one per shape — no venv to build:
+Eight scripts at the repo root, four per control plane, one per shape — no venv
+to build:
 
 ```
-scripts/v2/{fanout,long_chain,concurrency,swarm}.py     Flyte v2 SDK
-scripts/v1/{fanout,long_chain,concurrency,swarm}.py     flytekit
-scripts/{sample_mem.sh,plot_results.py}                 shared
+v2/{fanout,long_chain,concurrency,swarm}.py     Flyte v2 SDK
+v1/{fanout,long_chain,concurrency,swarm}.py     flytekit
+sample_mem.sh, plot_results.py                  shared
 ```
 
 Each script carries its own dependencies in a [PEP 723](https://peps.python.org/pep-0723/)
@@ -105,8 +107,7 @@ header, so `uv run` installs them (and a Python 3.12) on first use. The two
 planes take **identical flags**, so comparing them is the same command twice:
 
 ```bash
-git clone https://github.com/flyteorg/benchmark
-cd benchmark/flyte-benchmark/skills/flyte-benchmark/scripts
+git clone https://github.com/flyteorg/benchmark && cd benchmark
 export FLYTECTL_CONFIG=~/.flyte/config.yaml    # <- the cluster under test
 
 uv run v2/fanout.py --n 1000                   # Flyte v2
@@ -126,10 +127,10 @@ Each prints a `RESULT_JSON:{...}` line. Append them to one file to chart later,
 and loop in the shell to sweep:
 
 ```bash
-for n in 1000 2000 3000 4000 5000 6000; do uv run v2/fanout.py --n $n | tee -a ../results.jsonl; done
-for l in 100 300 500;                    do uv run v2/long_chain.py --length $l | tee -a ../results.jsonl; done
-for m in 1000 5000 10000 20000 40000;    do uv run v2/concurrency.py --m $m --hold 120 | tee -a ../results.jsonl; done
-for k in 2 5 10 25 50 100;               do uv run v2/swarm.py --k $k --n 2000 | tee -a ../results.jsonl; done
+for n in 1000 2000 3000 4000 5000 6000; do uv run v2/fanout.py --n $n | tee -a results.jsonl; done
+for l in 100 300 500;                    do uv run v2/long_chain.py --length $l | tee -a results.jsonl; done
+for m in 1000 5000 10000 20000 40000;    do uv run v2/concurrency.py --m $m --hold 120 | tee -a results.jsonl; done
+for k in 2 5 10 25 50 100;               do uv run v2/swarm.py --k $k --n 2000 | tee -a results.jsonl; done
 ```
 
 Run the **same commands against each cluster** (swap `FLYTECTL_CONFIG`) so the
@@ -151,8 +152,8 @@ NS=flyte SEL=app.kubernetes.io/name=flytepropeller CONT=flytepropeller ./sample_
 ### Summarize + compare
 
 ```bash
-uv run plot_results.py ../results.jsonl --out ../charts
-# summary table, plus ../charts_walltime.png and ../charts_memory.png
+uv run plot_results.py results.jsonl --out charts
+# summary table, plus charts_walltime.png and charts_memory.png
 ```
 
 Compare your numbers to
@@ -199,19 +200,21 @@ executor OOMs the 200k swarm that Union completes.
 ## Layout
 
 ```
-benchmark/                                  <- marketplace repo
-  .claude-plugin/marketplace.json           <- marketplace catalog
+benchmark/
+  v1/                                       <- 4 benchmarks on flytekit + _common.py
+  v2/                                       <- the same 4 on the Flyte v2 SDK
+  sample_mem.sh, plot_results.py            <- shared by both planes
   charts/                                   <- README charts + make_charts.py
+  .claude-plugin/marketplace.json           <- marketplace catalog
   flyte-benchmark/                          <- the plugin
     .claude-plugin/plugin.json
     skills/flyte-benchmark/
       SKILL.md                              <- skill instructions
       reference_results.md                  <- numbers to compare against
-      scripts/
-        sample_mem.sh, plot_results.py      <- shared by both planes
-        v2/                                 <- 4 benchmarks (Flyte v2 SDK) + _common.py
-        v1/                                 <- the same 4 on flytekit
 ```
+
+The benchmarks sit at the repo root so they can be run directly; the skill is
+instructions for driving them, not a second copy of them.
 
 ## License
 

@@ -6,8 +6,13 @@ description: Reproduce the Flyte v1 vs v2 (OSS) vs Union control-plane scaling b
 # Flyte Benchmark
 
 Reproduces the control-plane scaling benchmarks comparing **Flyte v1**, **Flyte v2
-(OSS)**, and **Union**. Everything is self-contained in this skill directory —
-zip it and share it, or run it directly.
+(OSS)**, and **Union**. The benchmarks live at the root of
+[flyteorg/benchmark](https://github.com/flyteorg/benchmark) (`v1/` and `v2/`), so
+they can be run by hand or driven from here:
+
+```bash
+git clone https://github.com/flyteorg/benchmark && cd benchmark
+```
 
 ## What it measures
 
@@ -21,10 +26,9 @@ so you measure *orchestration* cost, not pod startup.
 | concurrency | `concurrency.py` | hold M leaves live for a window — steady-state load |
 | swarm | `swarm.py` | K independent fan-out runs at once — the scale / OOM test |
 
-Each shape exists twice: `scripts/v2/` (Flyte v2 SDK) and `scripts/v1/`
+Each shape exists twice: `v2/` (Flyte v2 SDK) and `v1/`
 (flytekit + flytepropeller), taking **identical flags** and printing the same
-`RESULT_JSON:` line. `scripts/sample_mem.sh` and `scripts/plot_results.py` are
-shared.
+`RESULT_JSON:` line. `sample_mem.sh` and `plot_results.py` are shared.
 
 Metrics: end-to-end **wall-clock** (from the driver) and **peak memory + OOM** of
 the orchestration pod (from `sample_mem.sh`).
@@ -49,24 +53,24 @@ apples-to-apples — same task image and driver, no relaunching failures.
 ```bash
 export FLYTECTL_CONFIG=~/.flyte/config.yaml       # <- the cluster under test
 
-uv run scripts/v2/fanout.py      --n 1000
-uv run scripts/v2/long_chain.py  --length 100
-uv run scripts/v2/concurrency.py --m 5000 --hold 120
-uv run scripts/v2/swarm.py       --k 25 --n 2000     # 50k actions
+uv run v2/fanout.py      --n 1000
+uv run v2/long_chain.py  --length 100
+uv run v2/concurrency.py --m 5000 --hold 120
+uv run v2/swarm.py       --k 25 --n 2000     # 50k actions
 ```
 
 The v1 scripts take the same flags — swap `v2` for `v1` (with `FLYTECTL_CONFIG`
 pointing at the v1 cluster's config):
 
 ```bash
-uv run scripts/v1/fanout.py --n 1000
+uv run v1/fanout.py --n 1000
 ```
 
 Each prints a `RESULT_JSON:{...}` line; append them to one file (`| tee -a
 results.jsonl`) to chart later, and loop in the shell to sweep:
 
 ```bash
-for l in 100 300 500; do uv run scripts/v2/long_chain.py --length $l | tee -a results.jsonl; done
+for l in 100 300 500; do uv run v2/long_chain.py --length $l | tee -a results.jsonl; done
 ```
 
 Notes that keep v1 comparable: leaves are core-sleep there too (via a prebuilt
@@ -79,9 +83,9 @@ Memory + OOM (run in a second terminal *while a workload executes*):
 
 ```bash
 # v2 / OSS single-binary pod:
-NS=flyte SEL='app.kubernetes.io/name=flyte-binary' CONT=flyte scripts/sample_mem.sh 1800
+NS=flyte SEL='app.kubernetes.io/name=flyte-binary' CONT=flyte ./sample_mem.sh 1800
 # v1: sample flytepropeller
-NS=flyte SEL='app.kubernetes.io/name=flytepropeller' CONT=flytepropeller scripts/sample_mem.sh 1800
+NS=flyte SEL='app.kubernetes.io/name=flytepropeller' CONT=flytepropeller ./sample_mem.sh 1800
 # prints  PEAK_MEM_MIB=<n> RESTARTS_DELTA=<n>   (RESTARTS_DELTA>0 => OOMKilled, exit 137)
 ```
 
@@ -95,7 +99,7 @@ NS=flyte SEL='app.kubernetes.io/name=flytepropeller' CONT=flytepropeller scripts
 ## Collect + compare
 
 ```bash
-uv run scripts/plot_results.py results.jsonl --out charts
+uv run plot_results.py results.jsonl --out charts
 ```
 
 Prints a summary table and writes `charts_walltime.png`
