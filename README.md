@@ -1,4 +1,4 @@
-# benchmark
+# Flyte Benchmarks
 
 Reproducible **Flyte scaling benchmarks**, packaged as a Claude Code plugin.
 Compares **Flyte v1**, **Flyte v2 (OSS)**, and **Union** on the same workloads
