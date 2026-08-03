@@ -23,7 +23,7 @@ plt.rcParams.update({"font.family": "serif", "font.size": 11})
 # Brand palette: Flyte v1 = muted violet, Flyte v2 = brand violet, Union = gold.
 # BAD stays a warning red — it flags OOM/failure, not a product, so it must read
 # as distinct from any brand bar.
-V1, V2, UN, BAD = "#9674bf", "#8C4FFF", "#e0a800", "#c44e52"
+V1, V2, UN, BAD = "#cbb7ff", "#8C4FFF", "#e0a800", "#c44e52"
 
 
 def bars(ax, cats, series, fmt="{:.0f}", label_size=8.5):
