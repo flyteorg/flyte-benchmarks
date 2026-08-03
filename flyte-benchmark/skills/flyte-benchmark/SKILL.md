@@ -7,11 +7,11 @@ description: Reproduce the Flyte v1 vs v2 (OSS) vs Union scaling benchmarks — 
 
 Reproduces the scaling benchmarks comparing **Flyte v1**, **Flyte v2 (OSS)**, and
 **Union**. The benchmarks live in `scripts/` of
-[flyteorg/benchmark](https://github.com/flyteorg/benchmark), so they can be run by
+[flyteorg/flyte-benchmarks](https://github.com/flyteorg/flyte-benchmarks), so they can be run by
 hand or driven from here:
 
 ```bash
-git clone https://github.com/flyteorg/benchmark && cd benchmark
+git clone https://github.com/flyteorg/flyte-benchmarks && cd flyte-benchmarks
 ```
 
 ## What it measures
