@@ -4,6 +4,11 @@ Reproducible **Flyte scaling benchmarks**, packaged as a Claude Code plugin.
 Compares **Flyte v1**, **Flyte v2 (OSS)**, and **Union** on the same workloads
 and collects wall-clock, peak memory, and OOM results.
 
+**Papers:**
+[Flyte v1 vs v2](pdfs/flyte_v1_v2_paper.pdf) ·
+[Flyte v2 vs Union](pdfs/flyte_oss_vs_union_paper.pdf) ·
+[Reusable containers](pdfs/union_reusable_containers.pdf)
+
 This repo is a Claude Code **plugin marketplace** (`flyte-benchmarks`) hosting one plugin
 (`flyte-benchmark`). You can install it through Claude Code, or just clone the repo
 and run the scripts directly — no Claude required.
