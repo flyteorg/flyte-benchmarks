@@ -1,5 +1,5 @@
 {
-  "name": "benchmark",
+  "name": "flyte-benchmarks",
   "owner": {
     "name": "flyteorg",
     "url": "https://github.com/flyteorg"

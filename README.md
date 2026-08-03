@@ -4,7 +4,7 @@ Reproducible **Flyte scaling benchmarks**, packaged as a Claude Code plugin.
 Compares **Flyte v1**, **Flyte v2 (OSS)**, and **Union** on the same workloads
 and collects wall-clock, peak memory, and OOM results.
 
-This repo is a Claude Code **plugin marketplace** (`benchmark`) hosting one plugin
+This repo is a Claude Code **plugin marketplace** (`flyte-benchmarks`) hosting one plugin
 (`flyte-benchmark`). You can install it through Claude Code, or just clone the repo
 and run the scripts directly — no Claude required.
 
@@ -13,8 +13,8 @@ and run the scripts directly — no Claude required.
 ## Install (Claude Code plugin)
 
 ```text
-/plugin marketplace add flyteorg/benchmark
-/plugin install flyte-benchmark@benchmark
+/plugin marketplace add flyteorg/flyte-benchmarks
+/plugin install flyte-benchmark@flyte-benchmarks
 ```
 
 Then invoke the skill:
@@ -31,7 +31,7 @@ To try it before it's on GitHub (local test):
 
 ```bash
 /plugin marketplace add /path/to/this/repo
-/plugin install flyte-benchmark@benchmark
+/plugin install flyte-benchmark@flyte-benchmarks
 ```
 
 ---
@@ -112,7 +112,7 @@ header, so `uv run` installs them (and a Python 3.12) on first use. The two
 versions take **identical flags**, so comparing them is the same command twice:
 
 ```bash
-git clone https://github.com/flyteorg/benchmark && cd benchmark
+git clone https://github.com/flyteorg/flyte-benchmarks && cd flyte-benchmarks
 export FLYTECTL_CONFIG=~/.flyte/config.yaml    # <- the cluster under test
 
 uv run scripts/v2/fanout.py --n 1000                   # Flyte v2
@@ -211,7 +211,7 @@ swarm that Union completes.
 ## Layout
 
 ```
-benchmark/
+flyte-benchmarks/
   scripts/
     v1/                                     <- 4 benchmarks on flytekit + _common.py
     v2/                                     <- the same 4 on the Flyte v2 SDK
