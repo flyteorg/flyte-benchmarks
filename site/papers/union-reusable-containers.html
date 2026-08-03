@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reuse or Reload — Flyte Benchmarks</title>
+<meta name="description" content="The same 500-question vLLM batch-inference workload run with warm container reuse versus a fresh container per call, measured with nvidia-smi. Reuse finishes 4.1× faster.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+  (function () {
+    try { var t = localStorage.getItem('theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="dot"></span> Flyte Benchmarks</a>
+    <nav>
+      <a href="https://github.com/flyteorg/flyte-benchmarks" rel="noopener">GitHub</a>
+      <a href="#" id="theme-toggle" role="button" aria-label="Toggle color theme">Theme</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <article class="paper">
+    <p class="kicker">Flyte Systems Group &middot; Technical report FSG-26-04 &middot; July 2026</p>
+    <h1>Reuse or Reload</h1>
+    <p class="subtitle">A GPU-utilization study of batch LLM inference on Flyte v2</p>
+
+    <div class="actions">
+      <a class="btn btn-primary" href="../pdfs/union_reusable_containers.pdf">View the full PDF &rarr;</a>
+      <a class="btn btn-ghost" href="https://github.com/flyteorg/flyte-benchmarks/blob/main/pdfs/union_reusable_containers.pdf" rel="noopener">PDF in the repo</a>
+    </div>
+
+    <hr class="divider">
+
+    <p class="section-label">Abstract</p>
+    <div class="abstract">
+      <p>Serving large-model batch inference under an orchestrator forces a choice: keep a GPU worker
+      warm across many calls, or spin a fresh container per call. We run one identical vLLM workload
+      &mdash; 500 GSM8K questions through Qwen2.5-7B on an NVIDIA&nbsp;L4 &mdash; two ways. With container
+      reuse on a managed Union cluster the job finishes in 404&nbsp;s; a no-reuse variant on open-source
+      Flyte takes 1,665&nbsp;s &mdash; 4.1&times; slower &mdash; and, measured with <code>nvidia-smi</code>,
+      keeps the GPU actually computing only 16% of the run while a model sits resident 86% of it, where the
+      reuse GPU, warm, holds a steady 100%.</p>
+    </div>
+
+    <hr class="divider">
+
+    <p class="section-label">Results at a glance</p>
+    <div class="table-scroll">
+      <table class="data">
+        <caption>Table 1. Same workload, two execution models. Union figures in gold, Flyte in purple.</caption>
+        <thead>
+          <tr><th>Metric</th><th>Union &middot; reuse</th><th>Flyte &middot; no-reuse</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Wall-clock, 500 questions</td><td class="union">404 s</td><td class="flyte">1,665 s (4.1&times;)</td></tr>
+          <tr><td>Model loads for the job</td><td class="union">2</td><td class="flyte">10</td></tr>
+          <tr><td>Cold start, amortized / question</td><td class="union">~0.5 s</td><td class="flyte">~3.7 s</td></tr>
+          <tr><td>Effective batch size</td><td class="union">up to 256</td><td class="flyte">50</td></tr>
+          <tr><td>Peak decode throughput</td><td class="union">1,424 tok/s</td><td class="flyte">433 tok/s</td></tr>
+          <tr><td>Mean GPU utilization</td><td class="union">35.4%</td><td class="flyte">15.7%</td></tr>
+          <tr><td>Utilization while computing</td><td class="union">sustained 100%</td><td class="flyte">33-s bursts</td></tr>
+          <tr><td>Time computing (util &gt; 50%)</td><td class="union">35%</td><td class="flyte">16.1%</td></tr>
+          <tr><td>Time holding a model, idle</td><td class="union">61%</td><td class="flyte">86.5%</td></tr>
+          <tr><td>Per-worker cold start</td><td class="union">once</td><td class="flyte">3 m 11 s &times; 10</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="divider">
+
+    <p class="section-label">Figure</p>
+
+    <figure class="figure">
+      <div class="fig-frame">
+        <img src="../assets/figures/reusable/fig1.png"
+             alt="Two-panel nvidia-smi trace. (a) Union reuse: compute utilization is flat then jumps to a sustained 100% after one model load; GPU memory rises once and stays resident. (b) Flyte no-reuse: both strips sawtooth across ten model loads, each a brief 33-second 100% burst with memory rising and falling.">
+      </div>
+      <figcaption>
+        <p class="fig-exposition"><span class="fig-num">Figure 1.</span>
+        <strong>GPU traces, measured with <code>nvidia-smi</code> at 2&nbsp;s, one L4 per run</strong>
+        (compute utilization on top, GPU memory on the bottom). <strong>(a) Union reuse:</strong> one model
+        load, after which utilization holds a steady 100% while the model stays resident &mdash; mean
+        utilization rises toward 100% as more work amortizes the single load. <strong>(b) Flyte no-reuse:</strong>
+        both strips sawtooth &mdash; ten model loads, each a brief ~33-s utilization burst, memory rising and
+        falling as pods come and go. Integrated, Flyte computes for only 16% of the run while holding a model
+        resident 86% of it: almost always occupied, almost never working. (Union sampled inside the worker
+        container; Flyte from an on-node DaemonSet.)</p>
+      </figcaption>
+    </figure>
+
+    <a class="backlink" href="../index.html">&larr; All reports</a>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    Summarized from <a href="../pdfs/union_reusable_containers.pdf">union_reusable_containers.pdf</a> in the
+    <a href="https://github.com/flyteorg/flyte-benchmarks" rel="noopener">flyte-benchmarks</a> repository.
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var root = document.documentElement;
+      var cur = root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('theme', next); } catch (e) {}
+    });
+  })();
+</script>
+</body>
+</html>
