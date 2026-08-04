@@ -12,7 +12,7 @@
     {
       "name": "flyte-benchmark",
       "source": "./flyte-benchmark",
-      "description": "Reproduce Flyte v1 vs v2 (OSS) vs Union scaling benchmarks — fan-out, long-chain, concurrency, and the swarm scale/OOM test.",
+      "description": "Reproduce Flyte v1 vs v2 (OSS) vs Union scaling benchmarks — fan-out, long-chain, concurrency, and the swarm scale/OOM test — plus the agent-authoring token-efficiency benchmark (v1 vs v2).",
       "version": "0.1.0"
     }
   ]

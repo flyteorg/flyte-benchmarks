@@ -2,7 +2,7 @@
   "name": "flyte-benchmark",
   "displayName": "Flyte Benchmark",
   "version": "0.1.0",
-  "description": "Reproduce the Flyte v1 vs v2 (OSS) vs Union scaling benchmarks — fan-out, long-chain, concurrency, and the swarm scale/OOM test. Collects wall-clock, peak memory, and OOM results and compares to reference numbers.",
+  "description": "Reproduce the Flyte v1 vs v2 (OSS) vs Union scaling benchmarks — fan-out, long-chain, concurrency, and the swarm scale/OOM test — plus the agent-authoring benchmark measuring a coding agent's token cost to write working v1 vs v2 pipelines. Collects wall-clock, peak memory, OOM, and tokens-to-green results and compares to reference numbers.",
   "author": {
     "name": "flyteorg",
     "url": "https://github.com/flyteorg"
@@ -16,6 +16,8 @@
     "orchestration",
     "scale",
     "kubernetes",
-    "flytekit"
+    "flytekit",
+    "agent",
+    "token-efficiency"
   ]
 }
