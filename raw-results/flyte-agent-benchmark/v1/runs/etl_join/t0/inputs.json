@@ -1,0 +1,156 @@
+{
+  "orders": [
+    {
+      "order_id": 0,
+      "customer_id": 4,
+      "amount_cents": 2389,
+      "status": "completed"
+    },
+    {
+      "order_id": 1,
+      "customer_id": 4,
+      "amount_cents": 8825,
+      "status": "completed"
+    },
+    {
+      "order_id": 2,
+      "customer_id": 4,
+      "amount_cents": 1718,
+      "status": "completed"
+    },
+    {
+      "order_id": 3,
+      "customer_id": 5,
+      "amount_cents": 7835,
+      "status": "completed"
+    },
+    {
+      "order_id": 4,
+      "customer_id": 5,
+      "amount_cents": 7213,
+      "status": "cancelled"
+    },
+    {
+      "order_id": 5,
+      "customer_id": 3,
+      "amount_cents": 9152,
+      "status": "pending"
+    },
+    {
+      "order_id": 6,
+      "customer_id": 7,
+      "amount_cents": 8641,
+      "status": "cancelled"
+    },
+    {
+      "order_id": 7,
+      "customer_id": 0,
+      "amount_cents": 9089,
+      "status": "completed"
+    },
+    {
+      "order_id": 8,
+      "customer_id": 1,
+      "amount_cents": 6634,
+      "status": "completed"
+    },
+    {
+      "order_id": 9,
+      "customer_id": 7,
+      "amount_cents": 5558,
+      "status": "completed"
+    },
+    {
+      "order_id": 10,
+      "customer_id": 5,
+      "amount_cents": 1131,
+      "status": "completed"
+    },
+    {
+      "order_id": 11,
+      "customer_id": 3,
+      "amount_cents": 4009,
+      "status": "completed"
+    },
+    {
+      "order_id": 12,
+      "customer_id": 8,
+      "amount_cents": 7439,
+      "status": "completed"
+    },
+    {
+      "order_id": 13,
+      "customer_id": 1,
+      "amount_cents": 5343,
+      "status": "pending"
+    },
+    {
+      "order_id": 14,
+      "customer_id": 1,
+      "amount_cents": 5038,
+      "status": "cancelled"
+    },
+    {
+      "order_id": 15,
+      "customer_id": 1,
+      "amount_cents": 9069,
+      "status": "cancelled"
+    },
+    {
+      "order_id": 16,
+      "customer_id": 8,
+      "amount_cents": 3429,
+      "status": "cancelled"
+    },
+    {
+      "order_id": 17,
+      "customer_id": 7,
+      "amount_cents": 1601,
+      "status": "pending"
+    },
+    {
+      "order_id": 18,
+      "customer_id": 5,
+      "amount_cents": 9531,
+      "status": "completed"
+    }
+  ],
+  "customers": [
+    {
+      "customer_id": 0,
+      "region": "apac"
+    },
+    {
+      "customer_id": 1,
+      "region": "us-west"
+    },
+    {
+      "customer_id": 2,
+      "region": "eu"
+    },
+    {
+      "customer_id": 3,
+      "region": "apac"
+    },
+    {
+      "customer_id": 4,
+      "region": "apac"
+    },
+    {
+      "customer_id": 5,
+      "region": "eu"
+    },
+    {
+      "customer_id": 6,
+      "region": "apac"
+    },
+    {
+      "customer_id": 7,
+      "region": "eu"
+    },
+    {
+      "customer_id": 8,
+      "region": "us-east"
+    }
+  ]
+}
