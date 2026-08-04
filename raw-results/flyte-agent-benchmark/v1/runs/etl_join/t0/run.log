@@ -1,0 +1,5 @@
+[2;36m16:32:10.969316[0m[2;36m [0m[33mWARNING [0m remote.py:[1;36m321[0m - Jupyter notebook and interactive task  
+[2;36m                [0m         support is still alpha.                                
+WARNING:root:Failed to refresh token. Kicking off a full authorization flow.
+[redacted: local OAuth PKCE callback URL containing a one-time auth code]
+TRIAL_OUTPUT_JSON:{"by_region": [{"region": "apac", "orders": 5, "total_cents": 26030}, {"region": "eu", "orders": 4, "total_cents": 24055}, {"region": "us-east", "orders": 1, "total_cents": 7439}, {"region": "us-west", "orders": 1, "total_cents": 6634}]}
