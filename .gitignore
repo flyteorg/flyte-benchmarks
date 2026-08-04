@@ -2,6 +2,9 @@ __pycache__/
 *.pyc
 results.jsonl
 charts_*.png
+agent_results.jsonl
+agent_charts_*.png
+runs/
 .flyte/
 .DS_Store
 

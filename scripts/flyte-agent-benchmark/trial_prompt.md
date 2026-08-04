@@ -1,0 +1,70 @@
+# Trial prompt template
+
+The **identical** scaffold handed to the subagent under test, once per arm. The
+orchestrator fills the `{{...}}` slots and passes the whole thing as the subagent
+prompt. Nothing about the scaffold differs between v1 and v2 except the arm name,
+the cheatsheet, and the run/grade commands — that identity is what keeps the two
+arms comparable. Do **not** paste any reference solution here, and do **not**
+reveal any withheld inputs (e.g. test labels) — the agent only ever sees
+`inputs.json`.
+
+---
+
+You are authoring a data pipeline with **Flyte {{ARM}}** and nothing else. You
+have one document to work from: the cheatsheet at `{{CHEATSHEET_PATH}}`. Read it
+first. Do not fetch other docs or search the web — the equal-in-context-docs rule
+is the point of this measurement.
+
+Working directory: `{{WORKDIR}}` (already contains `inputs.json`). The oracle and
+helpers are at `{{HARNESS_DIR}}`.
+
+## The task
+
+{{SPEC_PROMPT}}
+
+## How to work
+
+1. Read `{{CHEATSHEET_PATH}}` and `{{WORKDIR}}/inputs.json`.
+2. Write `{{WORKDIR}}/solution.py`: a Flyte {{ARM}} pipeline that reads
+   `inputs.json`, runs on those inputs, and prints exactly one line
+   `TRIAL_OUTPUT_JSON:{...}` with the keys named in the task's output contract.
+   Run it **against the configured Flyte cluster**. The run command below sets
+   `{{RUN_ENV}}` — the cluster connection config for this arm (`FLYTE_AGENT_BENCH_CONFIG`,
+   which the SDK / `Config.auto(config_file=...)` reads; plus `FLYTECTL_CONFIG`
+   for v1). Your script must submit the run, wait for it to finish, and print the
+   outputs the run returns (see the cheatsheet's "Running" section). With no
+   config set it falls back to a local run.
+3. Run it against the cluster, capturing the printed output:
+   `cd {{WORKDIR}} && {{RUN_ENV}} <run solution.py> | tee run.log`
+   ({{RUN_ENV}} carries the arm's cluster config inline — env vars do not persist
+   between shell calls, so keep it on the run command. First remote call may pause
+   for a browser login unless the operator pre-authenticated.)
+4. Grade it:
+   `uv run {{HARNESS_DIR}}/oracle.py {{SPEC_ID}} --seed {{SEED}} --produced run.log`
+   (Grading uses the trial seed, so specs with withheld inputs are graded fairly;
+   never edit `run.log` to change the outcome.)
+   - `ORACLE:PASS` → you are done. Stop immediately; do not polish.
+   - `ORACLE:FAIL ...` or a crash → this counts as one failed iteration. Before
+     fixing, classify the error:
+     `uv run {{HARNESS_DIR}}/oracle.py --classify "<the error message>"`
+     Note the `ERROR_CLASS:` (framework / logic / unknown) and the iteration
+     number, then fix `solution.py` and go back to step 3.
+
+## Rules
+
+- **Turn budget: {{TURN_BUDGET}} run→fix iterations.** If you have not reached
+  `ORACLE:PASS` by then, stop and report `success=false`.
+- Never edit `inputs.json`, `oracle.py`, or the cheatsheet. Never hardcode the
+  answer — inputs are randomized, so only a real pipeline passes.
+- If the target framework **structurally cannot express** this task (the task
+  says so, and the cheatsheet gives you no primitive for it), stop early and
+  report `infeasible=true` with a one-line reason. Do not fake it.
+
+## Finish
+
+End your final message with one line, nothing after it:
+
+`TRIAL_REPORT_JSON:{"success": <bool>, "infeasible": <bool>, "iterations": <int>, "errors": [{"iteration": <int>, "class": "framework|logic|unknown", "note": "<short>"}], "solution_path": "{{WORKDIR}}/solution.py"}`
+
+- `iterations` = number of run→grade attempts you made (a first-try pass = 1).
+- `errors` = one entry per failed attempt, with its classification.
