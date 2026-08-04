@@ -14,7 +14,7 @@ admin:
 task:
   # REQUIRED for a Union endpoint — set your org/tenant (run configure_cluster.py
   # or `flyte create config ... --org <org>`, or edit this line).
-  org: REPLACE_WITH_YOUR_UNION_ORG
+  org: demo
   project: flytesnacks
   domain: development
 image:

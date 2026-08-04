@@ -1,0 +1,4 @@
+[2;36m17:08:56.413308[0m[2;36m [0m[33mWARNING [0m  _type_engine.py:2146 - Unsupported Type <class 'list'> found, Flyte will default to use PickleFile as the transport. Pickle can only  
+[2;36m                [0m         be used to send objects between the exact same version of Python, and we strongly recommend to use python type that flyte support.     
+rfg85mx7tcfv99bthn65 https://development.uniondemo.run/v2/domain/development/project/flytesnacks/runs/rfg85mx7tcfv99bthn65
+TRIAL_OUTPUT_JSON:{"answer": 73}

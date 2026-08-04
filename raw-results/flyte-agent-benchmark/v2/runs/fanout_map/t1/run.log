@@ -1,0 +1,14 @@
+[2mInstalled [1m58 packages[0m [2min 73ms[0m[0m
+[flyte] >> Building 1 image...
+[flyte]   >> Building image flyte for environment fanout_map
+[flyte]   -- Image ghcr.io/flyteorg/flyte:py3.13-v2.5.17 already exists, skipping build
+[flyte] OK Built image for environment fanout_map: ghcr.io/flyteorg/flyte:py3.13-v2.5.17
+[flyte] >> Bundling code...
+[flyte] OK Code bundle: 1 files, 0.009765625 MB (compressed 0.0007009506225585938 MB)
+[flyte] >> Uploading code bundle...
+[flyte] >> Waiting for run 'r7w9gw9hwp5h4m4q7bn8'...
+[flyte] -- Run 'r7w9gw9hwp5h4m4q7bn8': ActionPhase.QUEUED (-1 day, 23:59:58.090806 secs, attempt 1)
+[flyte] -- Run 'r7w9gw9hwp5h4m4q7bn8': ActionPhase.INITIALIZING (-1 day, 23:59:59.173563 secs, attempt 1)
+[flyte] -- Run 'r7w9gw9hwp5h4m4q7bn8': ActionPhase.RUNNING (0:00:00.614791 secs, attempt 1)
+r7w9gw9hwp5h4m4q7bn8 https://development.uniondemo.run/v2/domain/development/project/flytesnacks/runs/r7w9gw9hwp5h4m4q7bn8
+TRIAL_OUTPUT_JSON:{"squares": [1296, 2304, 16, 256, 49, 961, 2304]}

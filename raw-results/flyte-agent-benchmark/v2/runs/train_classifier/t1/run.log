@@ -1,0 +1,14 @@
+[2mInstalled [1m58 packages[0m [2min 76ms[0m[0m
+[flyte] >> Building 1 image...
+[flyte]   >> Building image flyte for environment train_classifier
+[flyte]   -- Image ghcr.io/flyteorg/flyte:py3.13-v2.5.17 already exists, skipping build
+[flyte] OK Built image for environment train_classifier: ghcr.io/flyteorg/flyte:py3.13-v2.5.17
+[flyte] >> Bundling code...
+[flyte] OK Code bundle: 1 files, 0.009765625 MB (compressed 0.0011320114135742188 MB)
+[flyte] >> Uploading code bundle...
+[flyte] >> Waiting for run 'rnl8zvtsspg9mb8wxv69'...
+[flyte] -- Run 'rnl8zvtsspg9mb8wxv69': ActionPhase.QUEUED (-1 day, 23:59:58.076210 secs, attempt 1)
+[flyte] -- Run 'rnl8zvtsspg9mb8wxv69': ActionPhase.INITIALIZING (-1 day, 23:59:58.499393 secs, attempt 1)
+[flyte] -- Run 'rnl8zvtsspg9mb8wxv69': ActionPhase.RUNNING (-1 day, 23:59:59.404797 secs, attempt 1)
+rnl8zvtsspg9mb8wxv69 https://development.uniondemo.run/v2/domain/development/project/flytesnacks/runs/rnl8zvtsspg9mb8wxv69
+TRIAL_OUTPUT_JSON:{"predictions": [1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]}

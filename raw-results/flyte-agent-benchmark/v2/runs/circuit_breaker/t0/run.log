@@ -1,0 +1,13 @@
+[flyte] >> Building 1 image...
+[flyte]   >> Building image flyte for environment circuit_breaker
+[flyte]   -- Image ghcr.io/flyteorg/flyte:py3.13-v2.5.17 already exists, skipping build
+[flyte] OK Built image for environment circuit_breaker: ghcr.io/flyteorg/flyte:py3.13-v2.5.17
+[flyte] >> Bundling code...
+[flyte] OK Code bundle: 1 files, 0.009765625 MB (compressed 0.0013246536254882812 MB)
+[flyte] >> Uploading code bundle...
+[flyte] >> Waiting for run 'rkmzc298z2skm76xps4d'...
+[flyte] -- Run 'rkmzc298z2skm76xps4d': ActionPhase.QUEUED (-1 day, 23:59:58.090764 secs, attempt 1)
+[flyte] -- Run 'rkmzc298z2skm76xps4d': ActionPhase.INITIALIZING (-1 day, 23:59:58.819604 secs, attempt 1)
+[flyte] -- Run 'rkmzc298z2skm76xps4d': ActionPhase.RUNNING (-1 day, 23:59:59.485694 secs, attempt 1)
+rkmzc298z2skm76xps4d https://development.uniondemo.run/v2/domain/development/project/flytesnacks/runs/rkmzc298z2skm76xps4d
+TRIAL_OUTPUT_JSON:{"winner": 6}

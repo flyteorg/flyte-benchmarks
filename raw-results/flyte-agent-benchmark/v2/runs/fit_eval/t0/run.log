@@ -1,0 +1,13 @@
+[flyte] >> Building 1 image...
+[flyte]   >> Building image flyte for environment fit_eval
+[flyte]   -- Image ghcr.io/flyteorg/flyte:py3.13-v2.5.17 already exists, skipping build
+[flyte] OK Built image for environment fit_eval: ghcr.io/flyteorg/flyte:py3.13-v2.5.17
+[flyte] >> Bundling code...
+[flyte] OK Code bundle: 1 files, 0.009765625 MB (compressed 0.0009012222290039062 MB)
+[flyte] >> Uploading code bundle...
+[flyte] >> Waiting for run 'rgrhw6tdldnvl8kxh8bd'...
+[flyte] -- Run 'rgrhw6tdldnvl8kxh8bd': ActionPhase.QUEUED (-1 day, 23:59:58.154995 secs, attempt 1)
+[flyte] -- Run 'rgrhw6tdldnvl8kxh8bd': ActionPhase.INITIALIZING (-1 day, 23:59:58.192324 secs, attempt 1)
+[flyte] -- Run 'rgrhw6tdldnvl8kxh8bd': ActionPhase.RUNNING (-1 day, 23:59:58.820271 secs, attempt 1)
+rgrhw6tdldnvl8kxh8bd https://development.uniondemo.run/v2/domain/development/project/flytesnacks/runs/rgrhw6tdldnvl8kxh8bd
+TRIAL_OUTPUT_JSON:{"slope": 3.059, "intercept": 4.4149, "mse": 2.171}

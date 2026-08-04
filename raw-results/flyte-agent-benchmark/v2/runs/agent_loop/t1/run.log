@@ -1,0 +1,16 @@
+[2mInstalled [1m58 packages[0m [2min 69ms[0m[0m
+[flyte] >> Building 1 image...
+[flyte]   >> Building image flyte for environment agent_loop_demo
+[flyte]   -- Image ghcr.io/flyteorg/flyte:py3.13-v2.5.17 already exists, skipping build
+[flyte] OK Built image for environment agent_loop_demo: ghcr.io/flyteorg/flyte:py3.13-v2.5.17
+[flyte] >> Bundling code...
+[flyte] OK Code bundle: 1 files, 0.009765625 MB (compressed 0.0007581710815429688 MB)
+[flyte] >> Uploading code bundle...
+[2;36m17:08:25.693910[0m[2;36m [0m[33mWARNING [0m  _type_engine.py:2146 - Unsupported Type <class 'list'> found, Flyte will default to use PickleFile as the transport. Pickle can only  
+[2;36m                [0m         be used to send objects between the exact same version of Python, and we strongly recommend to use python type that flyte support.     
+[flyte] >> Waiting for run 'rl52g4t8k7c9ql6s5rpw'...
+[flyte] -- Run 'rl52g4t8k7c9ql6s5rpw': ActionPhase.QUEUED (-1 day, 23:59:58.935374 secs, attempt 1)
+[flyte] -- Run 'rl52g4t8k7c9ql6s5rpw': ActionPhase.INITIALIZING (-1 day, 23:59:59.008035 secs, attempt 1)
+[flyte] -- Run 'rl52g4t8k7c9ql6s5rpw': ActionPhase.RUNNING (-1 day, 23:59:59.544506 secs, attempt 1)
+rl52g4t8k7c9ql6s5rpw https://development.uniondemo.run/v2/domain/development/project/flytesnacks/runs/rl52g4t8k7c9ql6s5rpw
+TRIAL_OUTPUT_JSON:{"answer": 57}
