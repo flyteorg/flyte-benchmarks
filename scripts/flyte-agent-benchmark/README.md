@@ -9,8 +9,8 @@ This README is the quickstart for the scripts.
 ## Layout
 
 ```
-specs.py          8 framework-agnostic pipeline specs + deterministic oracles
-make_inputs.py    write a trial's randomized inputs.json (seeded)
+specs.py          12 framework-agnostic pipeline specs + oracles (groups A/B/C)
+make_inputs.py    write a trial's randomized inputs.json (seeded; strips hidden keys)
 oracle.py         grade a produced output; --classify an error (framework/logic)
 record.py         append one trial row to agent_results.jsonl
 score.py          aggregate + chart v1 vs v2

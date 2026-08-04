@@ -27,7 +27,10 @@ def main():
     a = ap.parse_args()
     if a.spec_id not in SPECS:
         raise SystemExit(f"unknown spec {a.spec_id!r}; choose from {sorted(SPECS)}")
-    inputs = make_inputs(a.spec_id, a.seed)
+    spec = SPECS[a.spec_id]
+    # The agent only sees the public inputs; any hidden_keys (e.g. test labels)
+    # are withheld here and re-derived by the oracle from the seed at grade time.
+    inputs = spec.public(make_inputs(a.spec_id, a.seed))
     blob = json.dumps(inputs, indent=2)
     if a.show:
         print(blob)

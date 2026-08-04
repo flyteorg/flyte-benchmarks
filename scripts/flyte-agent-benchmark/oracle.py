@@ -88,10 +88,16 @@ def main() -> int:
         return 2
     spec = SPECS[args.spec_id]
 
-    if args.inputs:
-        inputs = json.load(open(args.inputs))
-    elif args.seed is not None:
+    if args.seed is not None:
+        # Authoritative: regenerate the FULL inputs (incl. any withheld labels).
         inputs = make_inputs(args.spec_id, args.seed)
+    elif args.inputs:
+        inputs = json.load(open(args.inputs))
+        missing = [k for k in spec.hidden_keys if k not in inputs]
+        if missing:
+            print(f"ORACLE:FAIL {spec.id} withholds {missing} from the agent's "
+                  f"inputs.json — grade it with --seed <n>, not --inputs")
+            return 2
     else:
         print("ORACLE:FAIL need --inputs or --seed")
         return 2

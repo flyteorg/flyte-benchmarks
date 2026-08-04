@@ -1,10 +1,12 @@
 # Trial prompt template
 
 The **identical** scaffold handed to the subagent under test, once per arm. The
-orchestrator fills the four `{{...}}` slots and passes the whole thing as the
-subagent prompt. Nothing about the scaffold differs between v1 and v2 except the
-arm name, the cheatsheet, and the run/grade commands — that identity is what
-keeps the two arms comparable. Do **not** paste any reference solution here.
+orchestrator fills the `{{...}}` slots and passes the whole thing as the subagent
+prompt. Nothing about the scaffold differs between v1 and v2 except the arm name,
+the cheatsheet, and the run/grade commands — that identity is what keeps the two
+arms comparable. Do **not** paste any reference solution here, and do **not**
+reveal any withheld inputs (e.g. test labels) — the agent only ever sees
+`inputs.json`.
 
 ---
 
@@ -30,7 +32,9 @@ helpers are at `{{HARNESS_DIR}}`.
 3. Run it, capturing the printed output:
    `cd {{WORKDIR}} && <run solution.py> | tee run.log`
 4. Grade it:
-   `uv run {{HARNESS_DIR}}/oracle.py {{SPEC_ID}} --inputs {{WORKDIR}}/inputs.json --produced run.log`
+   `uv run {{HARNESS_DIR}}/oracle.py {{SPEC_ID}} --seed {{SEED}} --produced run.log`
+   (Grading uses the trial seed, so specs with withheld inputs are graded fairly;
+   never edit `run.log` to change the outcome.)
    - `ORACLE:PASS` → you are done. Stop immediately; do not polish.
    - `ORACLE:FAIL ...` or a crash → this counts as one failed iteration. Before
      fixing, classify the error:

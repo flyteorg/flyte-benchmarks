@@ -49,12 +49,12 @@ cheatsheet.
 
 ## The task suite
 
-Eight specs (`scripts/flyte-agent-benchmark/specs.py`), graded easy→hard, in two
-groups:
+Twelve specs (`scripts/flyte-agent-benchmark/specs.py`), graded easy→hard, in
+three groups:
 
 | group | spec | difficulty | tests |
 |---|---|---|---|
-| **A** head-to-head | `etl` | easy | task→task, passing outputs |
+| **A** core mechanics | `etl` | easy | task→task, passing outputs |
 | | `fanout_map` | easy | static fan-out / map |
 | | `conditional` | medium | runtime branch (`conditional` DSL vs native `if`) |
 | | `dynamic_fanout` | medium | data-dependent width (`@dynamic` vs native `for`) |
@@ -62,21 +62,33 @@ groups:
 | **B** v2 capability | `oom_retry` | hard | catch OOM, re-run step with more memory |
 | | `circuit_breaker` | hard | race live tasks, cancel losers, open on failures |
 | | `agent_loop` | hard | durable checkpointed tool loop |
+| **C** applied ML | `etl_join` | medium | record ETL — filter, join, group-by |
+| | `train_classifier` | hard | train a classifier, predict a held-out set |
+| | `hpo` | hard | hyperparameter sweep (fan-out) + pick best |
+| | `batch_inference` | medium | batched parallel inference, ordered reassembly |
 
-**Group A** is the token/iteration comparison — every spec is expressible in
-both arms. **Group B** are the value-dependent, in-process control-flow patterns
-v1 cannot express even with `@dynamic`; the v1 arm is expected to record
+**Groups A and C are the head-to-head** token/iteration comparison — every spec
+is expressible in both arms. A is core orchestration mechanics; C is realistic
+data + ML pipelines (heavier — a solution may pull in numpy / pandas /
+scikit-learn). **Group B** are the value-dependent, in-process control-flow
+patterns v1 cannot express even with `@dynamic`; the v1 arm is expected to record
 `infeasible`, which is itself the result (the capability gap, not a token count).
 
 Each spec ships a deterministic oracle: inputs are randomized per trial (seeded),
 and the correct output is computed in plain Python, so **only a real pipeline
-passes** — a hardcoded answer fails across seeds.
+passes** — a hardcoded answer fails across seeds. A couple of specs grade on a
+property rather than exact match (e.g. `train_classifier` on held-out accuracy
+≥ 0.95) and withhold part of the inputs from the agent (the test labels); the
+oracle re-derives those from the seed, so grade those trials with `--seed`.
 
 ## Prerequisites
 
 - [`uv`](https://docs.astral.sh/uv/). Every harness script and every `solution.py`
   carries a PEP 723 header, so `uv run` installs `flytekit` / `flyte` (and the
-  right Python) on first use — the two SDKs never share an environment.
+  right Python) on first use — the two SDKs never share an environment. Group-C
+  (applied ML) solutions additionally pull in ML libraries (e.g. scikit-learn) —
+  the agent under test declares whatever it needs in its own script header; the
+  cheatsheet stays about Flyte, not ML libraries.
 - **Grading mode:**
   - **`local` (default, cheap).** `solution.py` runs the pipeline in-process, no
     cluster: `python solution.py` for v1 (a `@workflow` called at top level
@@ -103,10 +115,11 @@ You (the agent invoking this skill) are the **orchestrator**. Do not author the
 pipelines yourself — spawn one subagent per trial so the token count is measured,
 not estimated. Loop over `arms × specs × trials`.
 
-Suggested defaults: `TRIALS=2` per (arm, spec), `TURN_BUDGET=8`. That is
-`8 arms-specs... ` → 2 arms × 8 specs × 2 trials = **32 subagents**. Halve
-`TRIALS` for a quick pass. Announce the count before starting — this spends real
-tokens.
+Suggested defaults: `TRIALS=2` per (arm, spec), `TURN_BUDGET=8`. The full suite
+is 2 arms × 12 specs × 2 trials = **48 subagents** (group B has no v2-vs-v1 token
+race — the v1 arm there is a quick `infeasible` record). Halve `TRIALS`, or scope
+to a group (e.g. just A+C for the head-to-head, or just C for the ML specs), for
+a quicker pass. Announce the count before starting — this spends real tokens.
 
 For each trial `(arm, spec, seed)`:
 
@@ -121,10 +134,11 @@ For each trial `(arm, spec, seed)`:
    `{{SPEC_PROMPT}}`=the spec's `prompt` (print it with
    `uv run scripts/flyte-agent-benchmark/make_inputs.py <spec> --seed <n> --show`
    for inputs; the prompt text lives in `specs.py`), `{{SPEC_ID}}`=`<spec>`,
-   `{{WORKDIR}}`=`runs/<arm>/<spec>/t<n>`, `{{HARNESS_DIR}}`=`scripts/flyte-agent-benchmark`,
-   `{{TURN_BUDGET}}`=`8`. Use a plain general-purpose subagent; **do not** raise
-   its model/effort above the session default — fairness requires the same model
-   on both arms.
+   `{{SEED}}`=`<n>` (the subagent grades with `oracle.py --seed <n>`, which is
+   what lets specs withhold test labels), `{{WORKDIR}}`=`runs/<arm>/<spec>/t<n>`,
+   `{{HARNESS_DIR}}`=`scripts/flyte-agent-benchmark`, `{{TURN_BUDGET}}`=`8`. Use a
+   plain general-purpose subagent; **do not** raise its model/effort above the
+   session default — fairness requires the same model on both arms.
 3. **Record the result.** From the subagent's final `TRIAL_REPORT_JSON` line and
    its reported `subagent_tokens`:
    ```bash
@@ -144,9 +158,10 @@ arm's model identical.
 ## Running it — manual (one trial, no subagent)
 
 To sanity-check the loop yourself: `make_inputs.py` → read
-`<arm>/cheatsheet.md` → write `runs/.../solution.py` → run it → `oracle.py`
-→ fix → repeat, then `record.py` (leave `--tokens` off — there is no
-per-trajectory meter in manual mode; iterations/success/taxonomy still count).
+`<arm>/cheatsheet.md` → write `runs/.../solution.py` → run it → `oracle.py
+<spec> --seed <n> --produced run.log` → fix → repeat, then `record.py` (leave
+`--tokens` off — there is no per-trajectory meter in manual mode;
+iterations/success/taxonomy still count).
 
 ## Score + interpret
 
@@ -154,10 +169,11 @@ per-trajectory meter in manual mode; iterations/success/taxonomy still count).
 uv run scripts/flyte-agent-benchmark/score.py agent_results.jsonl --out agent_charts
 ```
 
-Prints the v1-vs-v2 table and the headline (group-A tokens-to-green ratio,
-iterations, success rate, framework-error fraction), the group-B capability
-outcome, and writes `agent_charts_tokens.png`. The *direction* is the claim:
-v2 reaches green in fewer tokens and fewer iterations, with a lower share of
+Prints the per-group v1-vs-v2 table and the headline (head-to-head A+C
+tokens-to-green ratio, iterations, success rate, framework-error fraction), the
+group-B capability outcome, and writes `agent_charts_tokens.png`. The *direction*
+is the claim: across both the core-mechanics (A) and applied-ML (C) specs, v2
+reaches green in fewer tokens and fewer iterations, with a lower share of
 framework-mechanics errors; v1 records the group-B specs as infeasible while v2
 solves them.
 
@@ -181,7 +197,8 @@ solves them.
 
 ## Files
 
-- `specs.py` — the 8 specs + deterministic oracles (`uv run specs.py` self-tests).
+- `specs.py` — the 12 specs + oracles, incl. hidden-label + property-based
+  grading (`uv run specs.py` self-tests).
 - `make_inputs.py` — write a trial's randomized `inputs.json` (or `--show`).
 - `oracle.py` — grade a produced output; `--classify` an error as framework/logic.
 - `record.py` — append one trial row to `agent_results.jsonl`.
