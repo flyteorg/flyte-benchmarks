@@ -126,23 +126,28 @@ Bump the version string to invalidate. `Cache(...)`: `version`, `serialize`,
 
 ## Running
 
+Config discovery: `FLYTECTL_CONFIG=/path/config.yaml` (or `pyflyte --config
+/path config.yaml run ...` — the flag goes BEFORE `run`), else `~/.flyte/config.yaml`.
+The first remote call opens a browser for OAuth2 PKCE login and caches the token.
+
 ```bash
+export FLYTECTL_CONFIG=/path/config.yaml
 pyflyte run --remote script.py wf --readings '[1,-2,3]'   # register + run remotely
 pyflyte run script.py wf --readings '[1,-2,3]'            # drop --remote to run locally
 ```
 
-`script.py` = file, `wf` = the `@workflow` name, then `--<input>` per workflow
-input (lists/dicts as JSON strings). Programmatic:
+Self-contained submit + **fetch outputs** (what a solution needs to print results):
 
 ```python
-from flytekit import FlyteRemote
 from flytekit.configuration import Config
-remote = FlyteRemote(Config.auto(), default_project="flytesnacks",
-                     default_domain="development")
-wf = remote.register_script(...)          # or remote.fetch_workflow(...)
-ex = remote.execute(wf, inputs={"readings": [1, -2, 3]})
-remote.wait(ex)                           # ex.outputs for results
+from flytekit.remote import FlyteRemote
+remote = FlyteRemote(Config.auto(config_file="/path/config.yaml"),
+                     default_project="flytesnacks", default_domain="development")
+ex = remote.execute(wf, inputs={"readings": [1, -2, 3]}, wait=True)  # auto-registers + runs
+print(ex.outputs["o0"])          # single output; NamedTuple -> ex.outputs["<field-name>"]
 ```
+
+Locally, just call `wf(readings=[1,-2,3])` at top level and get real values back.
 
 ## Gotchas — where authoring trips
 

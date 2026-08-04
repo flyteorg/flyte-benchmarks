@@ -1,0 +1,18 @@
+# Flyte v1 (flytekit / pyflyte / FlyteRemote) — benchmark cluster connection.
+#
+# Point the v1 arm at this file:
+#   export FLYTECTL_CONFIG=$PWD/scripts/flyte-agent-benchmark/config/v1.config.yaml
+# then `pyflyte --config $FLYTECTL_CONFIG run --remote ...` or FlyteRemote pick it up.
+#
+# Auth: the FIRST remote call opens a browser for OAuth2 PKCE login and caches the
+# token under ~/.flyte — there is no separate login command. (If you use the
+# `union` plugin instead, pre-auth with `union create login --host development.uniondemo.run`.)
+admin:
+  # gRPC dns scheme: strip https://, prefix dns:///, no trailing slash, no port.
+  # insecure: false implies TLS on 443.
+  endpoint: dns:///development.uniondemo.run
+  insecure: false
+  authType: Pkce
+logger:
+  show-source: true
+  level: 0

@@ -89,23 +89,38 @@ oracle re-derives those from the seed, so grade those trials with `--seed`.
   (applied ML) solutions additionally pull in ML libraries (e.g. scikit-learn) —
   the agent under test declares whatever it needs in its own script header; the
   cheatsheet stays about Flyte, not ML libraries.
-- **Grading mode:**
-  - **`local` (default, cheap).** `solution.py` runs the pipeline in-process, no
-    cluster: `python solution.py` for v1 (a `@workflow` called at top level
-    executes locally and returns real values), `flyte` local run for v2. Local
-    execution surfaces essentially all *framework-mechanics* errors — the ones
-    the benchmark is about — so it is the right default for measuring authoring
-    cost.
-  - **`remote` (faithful oracle).** Point each arm at a real v1 / v2 cluster
-    (same config discovery as the sibling skill: `FLYTECTL_CONFIG`, else
-    `~/.flyte/config.yaml`) and have `solution.py` submit remotely. Use this for
-    the headline report; note it in the results.
-  - **Grade group B (`oom_retry` especially) on a cluster.** Local execution
-    never enforces memory limits, and a child task's `OOMError` caught in a
-    parent is re-wrapped as `flyte.errors.RuntimeUserError` locally — so a
-    genuine OOM cannot be triggered in local mode and the escalation loop must
-    catch both types to run there at all. The v2 reference solution does; treat
-    the local group-B run as a smoke test and the cluster run as the real oracle.
+- **Cluster (the configured default).** Both arms target the Flyte cluster at
+  **`https://development.uniondemo.run/`**. Config files ship under
+  `scripts/flyte-agent-benchmark/config/` (`v1.config.yaml`, `v2.config.yaml`) —
+  both point `admin.endpoint` at `dns:///development.uniondemo.run`. **Set it up
+  once:**
+
+  ```bash
+  # fills the v2 org (required for a Union endpoint); prints the run commands:
+  uv run scripts/flyte-agent-benchmark/configure_cluster.py --org <your-union-org>
+  ```
+
+  A solution runs against the cluster when `FLYTE_AGENT_BENCH_CONFIG` points at
+  the arm's config file (its presence flips the solution from local to remote).
+  Env vars do **not** persist across tool shells, so pass it **inline** on each
+  run — v1 adds `FLYTECTL_CONFIG` too (for `pyflyte`):
+
+  ```bash
+  # v1:  FLYTE_AGENT_BENCH_CONFIG=…/config/v1.config.yaml FLYTECTL_CONFIG=…/config/v1.config.yaml uv run solution.py
+  # v2:  FLYTE_AGENT_BENCH_CONFIG=…/config/v2.config.yaml uv run solution.py
+  ```
+
+  **Auth is browser PKCE, once** and cached on disk (survives across runs).
+  Trigger/verify it up front so unattended trials don't block — v2: `flyte
+  whoami`; v1: any `pyflyte --config <v1.config.yaml> run --remote ...`. A solution
+  submits the run, waits, and reads back the outputs (v2 `run.outputs().o0`; v1
+  `ex.outputs[...]`) — see each cheatsheet's "Running" section.
+- **Local fallback (cheap smoke).** With no config env set, `solution.py` runs
+  in-process (v1 calls the `@workflow` at top level; v2 uses bare `flyte.init()`).
+  Local surfaces essentially all *framework-mechanics* errors, so it is fine for
+  quick harness checks — but **grade group B (`oom_retry` especially) on the
+  cluster**: local never enforces memory limits and re-wraps a child's `OOMError`
+  as `flyte.errors.RuntimeUserError`, so a genuine OOM can't be triggered there.
 - The model driving the agent is whatever the operator runs this session with —
   keep it **fixed across both arms** for a given comparison.
 
@@ -136,9 +151,14 @@ For each trial `(arm, spec, seed)`:
    for inputs; the prompt text lives in `specs.py`), `{{SPEC_ID}}`=`<spec>`,
    `{{SEED}}`=`<n>` (the subagent grades with `oracle.py --seed <n>`, which is
    what lets specs withhold test labels), `{{WORKDIR}}`=`runs/<arm>/<spec>/t<n>`,
-   `{{HARNESS_DIR}}`=`scripts/flyte-agent-benchmark`, `{{TURN_BUDGET}}`=`8`. Use a
-   plain general-purpose subagent; **do not** raise its model/effort above the
-   session default — fairness requires the same model on both arms.
+   `{{HARNESS_DIR}}`=`scripts/flyte-agent-benchmark`, `{{TURN_BUDGET}}`=`8`, and
+   `{{RUN_ENV}}` = the cluster config for this arm, passed **inline** (env vars do
+   not persist across tool shells) with absolute paths:
+   - v1: `FLYTE_AGENT_BENCH_CONFIG=$PWD/scripts/flyte-agent-benchmark/config/v1.config.yaml FLYTECTL_CONFIG=$PWD/scripts/flyte-agent-benchmark/config/v1.config.yaml`
+   - v2: `FLYTE_AGENT_BENCH_CONFIG=$PWD/scripts/flyte-agent-benchmark/config/v2.config.yaml`
+   (leave `{{RUN_ENV}}` empty to grade a trial locally). Use a plain
+   general-purpose subagent; **do not** raise its model/effort above the session
+   default — fairness requires the same model on both arms.
 3. **Record the result.** From the subagent's final `TRIAL_REPORT_JSON` line and
    its reported `subagent_tokens`:
    ```bash
@@ -205,6 +225,9 @@ solves them.
 - `score.py` — aggregate + chart v1 vs v2.
 - `count_tokens.py` — token proxy (cheatsheet balancing; output-token metric).
 - `trial_prompt.md` — the identical subagent scaffold.
+- `config/v1.config.yaml`, `config/v2.config.yaml` — cluster connection for each
+  arm (endpoint `dns:///development.uniondemo.run`); `configure_cluster.py` fills
+  the v2 org and prints the run commands.
 - `v1/cheatsheet.md`, `v2/cheatsheet.md` — the equal-budget arm docs.
 - `v1/solutions/`, `v2/solutions/` — held-out reference solutions (harness
   validation; never shown to the agent under test).

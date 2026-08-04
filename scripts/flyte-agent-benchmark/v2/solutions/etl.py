@@ -32,7 +32,14 @@ async def main(readings: list[int]) -> dict:
 
 
 if __name__ == "__main__":
+    import os
     inp = json.load(open("inputs.json"))
-    flyte.init()                              # local, in-process
-    r = flyte.run(main, **inp)
-    print("TRIAL_OUTPUT_JSON:" + json.dumps(r.outputs().o0))
+    cfg = os.getenv("FLYTE_AGENT_BENCH_CONFIG")            # set -> run on the cluster
+    if cfg:
+        flyte.init_from_config(cfg)
+        run = flyte.with_runcontext(mode="remote").run(main, **inp)
+        run.wait()                                         # remote runs are async
+    else:
+        flyte.init()                                       # local smoke, no cluster
+        run = flyte.run(main, **inp)
+    print("TRIAL_OUTPUT_JSON:" + json.dumps(run.outputs().o0))

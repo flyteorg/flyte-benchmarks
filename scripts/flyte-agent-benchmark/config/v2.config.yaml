@@ -1,0 +1,21 @@
+# Flyte v2 (the `flyte` SDK) — benchmark cluster connection.
+#
+# Point the v2 arm at this file:
+#   export FLYTE_AGENT_BENCH_CONFIG=$PWD/scripts/flyte-agent-benchmark/config/v2.config.yaml
+# read by flyte.init_from_config(path). Canonically regenerate with:
+#   flyte create config --endpoint development.uniondemo.run --org <your-org>
+#   (or: uv run scripts/flyte-agent-benchmark/configure_cluster.py --org <your-org>)
+#
+# Auth: the FIRST call (init/run) opens a browser for OAuth2 PKCE login; the token
+# is cached in the OS keyring. Check identity with `flyte whoami`. No login command.
+admin:
+  # dns scheme; TLS on 443 by default (omit `insecure` for a real HTTPS endpoint).
+  endpoint: dns:///development.uniondemo.run
+task:
+  # REQUIRED for a Union endpoint — set your org/tenant (run configure_cluster.py
+  # or `flyte create config ... --org <org>`, or edit this line).
+  org: REPLACE_WITH_YOUR_UNION_ORG
+  project: flytesnacks
+  domain: development
+image:
+  builder: local

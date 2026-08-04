@@ -146,18 +146,23 @@ max_turns=)`, `await agent.run.aio(...)`).
 
 ## Running
 
+Config: `flyte.init_from_config("config.yaml")` (path arg) or `init_from_config()`
+to auto-discover (`./config.yaml`, `~/.flyte/config.yaml`, `$FLYTE_CONFIG`). The
+first call opens a browser for PKCE login; `flyte whoami` verifies identity.
+
 ```python
 if __name__ == "__main__":
-    flyte.init_from_config()                       # discovers config.yaml
-    r = flyte.with_runcontext(mode="remote").run(main, readings=[1, -2, 3])
-    print(r.name, r.url)
-    r.wait()
-    print(r.outputs())                             # the return value(s)
+    flyte.init_from_config("config.yaml")          # remote endpoint from the config
+    run = flyte.with_runcontext(mode="remote").run(main, readings=[1, -2, 3])
+    print(run.name, run.url)
+    run.wait()                                     # remote runs are async
+    print(run.outputs().o0)                        # single return value
 ```
 
-`mode=` is a keyword (`mode="remote"` / `"local"`). CLI: `flyte run file.py main
---readings '[1,-2,3]'` (add `--local` to run locally). PEP-723 header means `uv
-run file.py` works.
+`.run` in remote mode **auto-registers** the task envs (no `flyte.deploy` needed
+for a one-shot). `mode=` is a keyword. LOCAL: bare `flyte.init()` then
+`flyte.run(main, ...)` (blocks; no `.wait()`). CLI: `flyte run file.py main
+--readings '[1,-2,3]'` (`--local` for local).
 
 ## Caching
 

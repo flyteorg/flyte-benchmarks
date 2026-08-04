@@ -16,11 +16,38 @@ record.py         append one trial row to agent_results.jsonl
 score.py          aggregate + chart v1 vs v2
 count_tokens.py   token proxy (balance cheatsheets; output-token metric)
 trial_prompt.md   the identical scaffold handed to each subagent
+configure_cluster.py   fill the v2 org + print the run commands
+config/v1.config.yaml  v1 (flytekit) cluster connection
+config/v2.config.yaml  v2 (flyte) cluster connection
 v1/cheatsheet.md  equal-budget docs for the v1 arm
 v2/cheatsheet.md  equal-budget docs for the v2 arm
 v1/solutions/     held-out reference solutions (HARNESS VALIDATION ONLY)
 v2/solutions/
 ```
+
+## Run on the cluster (`https://development.uniondemo.run/`)
+
+Both arms connect via the files in `config/` (endpoint
+`dns:///development.uniondemo.run`). Fill the v2 org once:
+
+```bash
+uv run configure_cluster.py --org <your-union-org>     # writes config/*.config.yaml
+flyte whoami                                            # trigger/verify PKCE login (cached)
+```
+
+A solution runs remotely when `FLYTE_AGENT_BENCH_CONFIG` points at the arm's
+config (its presence flips local -> remote); env doesn't persist across shells,
+so pass it inline:
+
+```bash
+# v2 arm
+FLYTE_AGENT_BENCH_CONFIG=$PWD/config/v2.config.yaml uv run v2/solutions/etl.py
+# v1 arm (also set FLYTECTL_CONFIG for pyflyte)
+FLYTE_AGENT_BENCH_CONFIG=$PWD/config/v1.config.yaml FLYTECTL_CONFIG=$PWD/config/v1.config.yaml \
+    uv run v1/solutions/etl.py
+```
+
+Unset (or don't pass) `FLYTE_AGENT_BENCH_CONFIG` to run the same solution locally.
 
 ## Validate the harness (no cluster, no SDK needed)
 

@@ -28,9 +28,17 @@ helpers are at `{{HARNESS_DIR}}`.
 2. Write `{{WORKDIR}}/solution.py`: a Flyte {{ARM}} pipeline that reads
    `inputs.json`, runs on those inputs, and prints exactly one line
    `TRIAL_OUTPUT_JSON:{...}` with the keys named in the task's output contract.
-   (Run locally — no cluster needed — unless told otherwise.)
-3. Run it, capturing the printed output:
-   `cd {{WORKDIR}} && <run solution.py> | tee run.log`
+   Run it **against the configured Flyte cluster**. The run command below sets
+   `{{RUN_ENV}}` — the cluster connection config for this arm (`FLYTE_AGENT_BENCH_CONFIG`,
+   which the SDK / `Config.auto(config_file=...)` reads; plus `FLYTECTL_CONFIG`
+   for v1). Your script must submit the run, wait for it to finish, and print the
+   outputs the run returns (see the cheatsheet's "Running" section). With no
+   config set it falls back to a local run.
+3. Run it against the cluster, capturing the printed output:
+   `cd {{WORKDIR}} && {{RUN_ENV}} <run solution.py> | tee run.log`
+   ({{RUN_ENV}} carries the arm's cluster config inline — env vars do not persist
+   between shell calls, so keep it on the run command. First remote call may pause
+   for a browser login unless the operator pre-authenticated.)
 4. Grade it:
    `uv run {{HARNESS_DIR}}/oracle.py {{SPEC_ID}} --seed {{SEED}} --produced run.log`
    (Grading uses the trial seed, so specs with withheld inputs are graded fairly;
