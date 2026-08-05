@@ -347,14 +347,14 @@ def render_detail_page(page):
 LANDING_CARDS = {
     "flyte": [
         dict(
-            href="https://claude.ai/code/artifact/95b1f87b-9c6f-42b0-971b-194445c708f6",
+            href="/benchmarks/flyte1-vs-flyte2",
             kicker="Scalability study",
             title="Outscaling Flyte v1",
             desc="Flyte v2 runs common orchestration patterns 4.3–6.5× faster and removes v1's single-process OOM cliff entirely.",
             stat="6.5× faster",
         ),
         dict(
-            href="https://claude.ai/code/artifact/27075d8f-08c7-499d-ad43-006d57b077e4",
+            href="/benchmarks/agents-write-flyte2-better",
             kicker="Agent-authoring-cost study",
             title="Agents Write Flyte v2 Better",
             desc="A coding agent reaches a working pipeline in 1.78× fewer tokens on v2 — and solves patterns v1 can't express at all.",
@@ -363,14 +363,14 @@ LANDING_CARDS = {
     ],
     "union": [
         dict(
-            href="https://claude.ai/code/artifact/f00d15b9-382c-4cce-921d-5de79d4d9071",
+            href="/benchmarks/flyte-vs-union",
             kicker="Multi-cluster scale-out study",
             title="Orchestration Without Limits",
             desc="Union scales out to complete 200,000-action workflows where single-cluster OSS Flyte OOM-kills its executor.",
             stat="200k actions, 0 failures",
         ),
         dict(
-            href="https://claude.ai/code/artifact/d30102c4-c34d-41b4-85f3-ba3b0e5d0d30",
+            href="/benchmarks/union-reusable-containers",
             kicker="GPU-utilization study",
             title="Reuse or Reload",
             desc="Container reuse keeps a 7B-model GPU at a sustained 100% utilization — 4.1× faster than spinning a fresh container per call.",
