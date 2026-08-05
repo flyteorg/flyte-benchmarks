@@ -1,0 +1,13 @@
+[flyte] >> Building 1 image...
+[flyte]   >> Building image flyte for environment hpo_ridge
+[flyte]   -- Image ghcr.io/flyteorg/flyte:py3.13-v2.5.17 already exists, skipping build
+[flyte] OK Built image for environment hpo_ridge: ghcr.io/flyteorg/flyte:py3.13-v2.5.17
+[flyte] >> Bundling code...
+[flyte] OK Code bundle: 1 files, 0.009765625 MB (compressed 0.00080108642578125 MB)
+[flyte] >> Uploading code bundle...
+[flyte] >> Waiting for run 'rh2qrw5kc4tw57vqm4wr'...
+[flyte] -- Run 'rh2qrw5kc4tw57vqm4wr': ActionPhase.QUEUED (-1 day, 23:59:58.077023 secs, attempt 1)
+[flyte] -- Run 'rh2qrw5kc4tw57vqm4wr': ActionPhase.INITIALIZING (-1 day, 23:59:58.324562 secs, attempt 1)
+[flyte] -- Run 'rh2qrw5kc4tw57vqm4wr': ActionPhase.RUNNING (-1 day, 23:59:59.035150 secs, attempt 1)
+rh2qrw5kc4tw57vqm4wr https://development.uniondemo.run/v2/domain/development/project/flytesnacks/runs/rh2qrw5kc4tw57vqm4wr
+TRIAL_OUTPUT_JSON:{"best_alpha": 0.0, "val_mse": 4.18}

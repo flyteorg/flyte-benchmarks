@@ -1,0 +1,14 @@
+[2mInstalled [1m58 packages[0m [2min 74ms[0m[0m
+[flyte] >> Building 1 image...
+[flyte]   >> Building image flyte for environment etl_sensor_readings
+[flyte]   -- Image ghcr.io/flyteorg/flyte:py3.13-v2.5.17 already exists, skipping build
+[flyte] OK Built image for environment etl_sensor_readings: ghcr.io/flyteorg/flyte:py3.13-v2.5.17
+[flyte] >> Bundling code...
+[flyte] OK Code bundle: 1 files, 0.009765625 MB (compressed 0.0008373260498046875 MB)
+[flyte] >> Uploading code bundle...
+[flyte] >> Waiting for run 'rjkjb65bs5jdljkw9pql'...
+[flyte] -- Run 'rjkjb65bs5jdljkw9pql': ActionPhase.QUEUED (-1 day, 23:59:58.085919 secs, attempt 1)
+[flyte] -- Run 'rjkjb65bs5jdljkw9pql': ActionPhase.INITIALIZING (-1 day, 23:59:58.726282 secs, attempt 1)
+[flyte] -- Run 'rjkjb65bs5jdljkw9pql': ActionPhase.RUNNING (-1 day, 23:59:59.924749 secs, attempt 1)
+rjkjb65bs5jdljkw9pql https://development.uniondemo.run/v2/domain/development/project/flytesnacks/runs/rjkjb65bs5jdljkw9pql
+TRIAL_OUTPUT_JSON:{"count": 13, "mean": 52.385}
