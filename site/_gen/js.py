@@ -113,7 +113,14 @@ ENGINE_JS = r"""
         var bw = barW * 0.84;
         if (v === null || v === undefined){
           var by = padT + innerH - 2;
-          var txt = el('text', { x: bx + bw/2, y: by - 6, class: 'oom-label' });
+          // Give the label the full half-group it sits in (not just its own
+          // narrow bar-slot) so it clears a sibling bar in the same group --
+          // a bar-slot-centered label collides with a neighbor once there
+          // are 3+ categories and the group narrows.
+          var anchor = 'middle', lx = gx;
+          if (s > 1 && si === 0){ anchor = 'end'; lx = gx - 5; }
+          else if (s > 1 && si === s - 1){ anchor = 'start'; lx = gx + 5; }
+          var txt = el('text', { x: lx, y: by - 6, class: 'oom-label', 'text-anchor': anchor });
           txt.textContent = opts.oomText || 'N/A';
           svg.appendChild(txt);
           return;

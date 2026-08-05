@@ -141,6 +141,7 @@ def root_vars(theme):
     keys = [
         "bg", "bg_elev", "bg_elev2", "border", "border_soft", "ink", "ink_dim", "ink_faint",
         "accent", "accent_2", "accent_ink", "spark", "series_a", "series_b", "bad", "grid_line",
+        "dark_band_bg", "dark_band_ink", "dark_band_ink_dim",
     ]
     lines = []
     for k in keys:
