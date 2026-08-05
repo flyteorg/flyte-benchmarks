@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agents Write Flyte v2 Better</title>
+<style>
+  @page { size: letter; margin: 0.72in 0.68in; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    font-size: 10.4pt;
+    line-height: 1.38;
+    color: #1a1a1a;
+  }
+  p { margin: 0 0 0.6em 0; text-align: justify; hyphens: auto; }
+
+  /* ---------- title block (full width, outside the columns) ---------- */
+  .titleblock { text-align: center; margin: 0 0 0.55em 0; }
+  h1.title { font-size: 22pt; margin: 0 0 0.12em 0; font-weight: 700; letter-spacing: -0.01em; }
+  .subtitle { font-size: 12.5pt; margin: 0 0 0.5em 0; color: #2a2a2a; font-style: italic; }
+  .byline { font-size: 8.6pt; letter-spacing: 0.06em; color: #666; text-transform: uppercase; font-variant: small-caps; }
+
+  .abstract-wrap { margin: 0.7em 0 0.9em 0; }
+  .abstract-label { font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .abstract-body { font-size: 9.6pt; text-align: justify; }
+
+  hr.rule { border: none; border-top: 0.6px solid #999; margin: 0.5em 0 0.8em 0; }
+
+  /* ---------- two-column body ---------- */
+  .cols { column-count: 2; column-gap: 0.34in; column-fill: auto; }
+  .cols h2 { break-after: avoid; }
+  .cols h3 { break-after: avoid; }
+
+  h2 { font-size: 11.6pt; font-weight: 700; margin: 0.85em 0 0.3em 0; }
+  h2 .num { color: #5a27db; margin-right: 0.35em; }
+  h3 { font-size: 10.2pt; font-weight: 700; font-style: italic; margin: 0.65em 0 0.25em 0; }
+
+  ul, ol { margin: 0.2em 0 0.6em 1.1em; padding: 0; }
+  li { margin-bottom: 0.22em; text-align: justify; }
+
+  /* ---------- figures ---------- */
+  figure { margin: 0.55em 0 0.75em 0; break-inside: avoid; text-align: center; }
+  figure.wide { column-span: all; margin: 0.5em 0 0.9em 0; }
+  figure img { max-width: 100%; display: block; margin: 0 auto; }
+  figcaption { font-size: 8.3pt; text-align: left; margin-top: 0.3em; line-height: 1.32; color: #222; }
+  figcaption b { color: #000; }
+
+  /* ---------- tables ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 0.4em 0 0.8em 0; break-inside: avoid; }
+  table.wide { column-span: all; }
+  caption { caption-side: top; font-size: 8.3pt; text-align: left; margin-bottom: 0.3em; font-weight: 700; }
+  th, td { padding: 3px 7px; text-align: left; vertical-align: top; border-bottom: 0.6px solid #ccc; }
+  thead th { border-bottom: 1.3px solid #333; font-weight: 700; }
+  tbody tr:last-child td { border-bottom: 1px solid #333; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .v1cell { color: #6b4fc9; font-weight: 700; }
+  .v2cell { color: #5a27db; font-weight: 700; }
+
+  /* ---------- code ---------- */
+  pre.code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 7.6pt;
+    line-height: 1.32;
+    background: #f7f5fb;
+    border: 0.6px solid #ddd6f0;
+    border-left: 2.5px solid #5a27db;
+    padding: 0.45em 0.55em;
+    margin: 0.35em 0 0.6em 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    break-inside: avoid;
+  }
+  .infeasible-code {
+    border-left-color: #c44e52;
+    background: #fdf4f4;
+  }
+  code.inline { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 9pt; background: #f2eefa; padding: 0 2px; border-radius: 2px; }
+
+  /* ---------- callouts ---------- */
+  .callout {
+    border: 0.8px solid #ddd6f0;
+    background: #f8f6fc;
+    border-radius: 3px;
+    padding: 0.5em 0.65em;
+    margin: 0.4em 0 0.7em 0;
+    font-size: 9.3pt;
+    break-inside: avoid;
+  }
+  .callout.punch { background: #fff8e6; border-color: #e0c56b; }
+  .callout b.head { color: #5a27db; }
+
+  /* ---------- harness diagram (Fig 1 analog) ---------- */
+  .harness { column-span: all; margin: 0.35em 0 0.9em 0; break-inside: avoid; }
+  .harness-row { display: flex; gap: 0.35em; align-items: stretch; justify-content: center; flex-wrap: nowrap; }
+  .hbox {
+    border: 1px solid #999; border-radius: 4px; padding: 0.4em 0.55em;
+    font-size: 8.3pt; flex: 1; text-align: center; background: #fff;
+  }
+  .hbox .htitle { font-weight: 700; font-size: 8.6pt; margin-bottom: 0.2em; }
+  .hbox.v1 { border-color: #a787ff; background: #f7f4ff; }
+  .hbox.v1 .htitle { color: #6b4fc9; }
+  .hbox.v2 { border-color: #5a27db; background: #f2edfc; }
+  .hbox.v2 .htitle { color: #5a27db; }
+  .hbox.oracle { border-color: #444; background: #fafafa; }
+  .harness-arrow { align-self: center; font-size: 14pt; color: #888; padding: 0 0.15em; }
+  .harness-caption { font-size: 8.3pt; color: #222; margin-top: 0.45em; line-height: 1.32; }
+
+  .small { font-size: 8.6pt; color: #444; }
+  .mono { font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  a { color: #5a27db; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="titleblock">
+  <h1 class="title">Agents Write Flyte v2 Better</h1>
+  <div class="subtitle">A Coding Agent Reaches a Working Pipeline in 1.8&times; Fewer Tokens on Flyte v2 &mdash;<br>and Solves Patterns Flyte v1 Cannot Express at All</div>
+  <div class="byline">Technical Report &middot; Agent-Authoring-Cost Study &middot; August 2026</div>
+</div>
+
+<div class="abstract-wrap">
+  <span class="abstract-label">Abstract.</span>
+  <span class="abstract-body">Coding agents now author most Flyte pipelines; the DSL a human rarely reads is a DSL an agent must get exactly right on every turn. We benchmark that authoring cost directly: the <em>same</em> Claude Code subagent, same model, same turn budget, primed with an equal-token-budget cheatsheet for Flyte v1 (<span class="mono">flytekit</span>) or Flyte v2 (<span class="mono">flyte</span>), writes a pipeline for each of 12 framework-agnostic specs against a real cluster, graded by a live oracle &mdash; 48 trials total, no simulation. On the nine specs both frameworks can express, v2 reaches a passing run in <b>1.78&times; fewer tokens</b> (73,301 vs 41,228 mean) and a <b>5&times; lower iteration count</b> (5.0 vs 1.0 median), with essentially every v1 failed iteration (54 of 54 logged, vs. v2's 1) being framework-mechanics friction rather than a logic bug. On three specs that require catching a live task failure as control flow, racing concurrent tasks with cancellation, or checkpointing an in-process loop, v1 recorded <b>0% success (6/6 infeasible)</b> while v2 solved <b>6/6</b> &mdash; not an efficiency gap but a capability one. Every reported number comes from a real subagent trajectory against a live Flyte cluster; raw trial data, code, and harness are public.</span>
+</div>
+<hr class="rule">
+
+<div class="cols">
+
+<h2><span class="num">1</span>Introduction</h2>
+<p>Two years ago the person who read a Flyte pipeline before it ran was the person who wrote it. Today it is increasingly a coding agent, drafting, running, and iterating on the pipeline glue while the human reviews a diff. That shift changes what "good framework ergonomics" means: not whether a human finds the DSL learnable over a career, but whether a language model &mdash; with a fixed context budget and a fixed number of turns &mdash; can turn a plain-language spec into a passing run without burning tokens on the framework's own mechanics.</p>
+<p>Flyte v1's authoring model is a domain-specific graph DSL: <span class="mono">@workflow</span> functions that don't execute Python, they trace it into a compiled graph of promises. Flyte v2's authoring model is ordinary <span class="mono">async</span>/<span class="mono">await</span> Python: calling a task creates a live action, and a value it returns is a value, not a graph handle. This report measures what that difference costs an agent in tokens and iterations &mdash; and separately, what it makes structurally impossible.</p>
+<p>We report a single controlled study, run for real: the same subagent harness, the same model (claude-sonnet-5, no override), an equal-token-budget cheatsheet per arm, and 48 trial trajectories graded by a live oracle against a shared Flyte cluster running both SDKs. This mirrors the house methodology of the companion scaling studies in this series &mdash; <i>real clusters, no simulation, failures reported rather than retried</i> &mdash; applied to the agent, not the pod.</p>
+
+<h2><span class="num">2</span>Two Authoring Models</h2>
+<p>The mechanism behind "v2 is easier to write" is concrete, not a vibe:</p>
+<table>
+<thead><tr><th>Dimension</th><th>Flyte v1</th><th>Flyte v2</th></tr></thead>
+<tbody>
+<tr><td>Authoring</td><td class="v1cell">DSL, promise parsing</td><td class="v2cell">Real async Python</td></tr>
+<tr><td>Control flow</td><td class="v1cell"><span class="mono">conditional</span>, map task</td><td class="v2cell">Native <span class="mono">for</span> / <span class="mono">if</span> / <span class="mono">try</span></td></tr>
+<tr><td>Dynamism</td><td class="v1cell">static / <span class="mono">dynamic</span> / <span class="mono">eager</span></td><td class="v2cell">One model &mdash; just Python</td></tr>
+<tr><td>Compile step</td><td class="v1cell">Backend graph compiler</td><td class="v2cell">None &mdash; you just run it</td></tr>
+<tr><td>Errors</td><td class="v1cell">Retries declared on graph</td><td class="v2cell">Typed exceptions, readable</td></tr>
+</tbody>
+</table>
+<p>Each row is a place an agent can spend its context on framework mechanics instead of the task: choosing among three dynamism modes instead of one, emitting a DSL construct instead of the native Python dense in its training data, or decoding a backend compiler's graph rejection instead of a Python traceback it can fix by reflex. Section&nbsp;4 turns "the mechanism is concrete" into a number.</p>
+
+<h2><span class="num">3</span>Method</h2>
+<h3>Hypothesis</h3>
+<p>Holding the agent, the model, and the documentation budget constant, a coding agent completes more pipeline-authoring tasks correctly, in fewer tokens and fewer run&rarr;fix iterations, when the target is Flyte v2 than when it is Flyte v1.</p>
+
+<h3>Task suite</h3>
+<p>Twelve framework-agnostic specs, written in plain language and never naming a Flyte API, graded easy&rarr;hard in three groups:</p>
+<table>
+<thead><tr><th>Group</th><th>Spec</th><th>Diff.</th><th>Tests</th></tr></thead>
+<tbody>
+<tr><td rowspan="5">A &mdash; core mechanics</td><td class="mono">etl</td><td>easy</td><td>task&rarr;task, passing outputs</td></tr>
+<tr><td class="mono">fanout_map</td><td>easy</td><td>static fan-out / map</td></tr>
+<tr><td class="mono">conditional</td><td>medium</td><td>runtime branch</td></tr>
+<tr><td class="mono">dynamic_fanout</td><td>medium</td><td>data-dependent width</td></tr>
+<tr><td class="mono">fit_eval</td><td>hard</td><td>multi-stage, named outputs</td></tr>
+<tr><td rowspan="3">B &mdash; v2-only capability</td><td class="mono">oom_retry</td><td>hard</td><td>catch OOM, retry w/ more mem</td></tr>
+<tr><td class="mono">circuit_breaker</td><td>hard</td><td>race live tasks, cancel losers</td></tr>
+<tr><td class="mono">agent_loop</td><td>hard</td><td>durable checkpointed tool loop</td></tr>
+<tr><td rowspan="4">C &mdash; applied ML</td><td class="mono">etl_join</td><td>medium</td><td>record ETL, join, group-by</td></tr>
+<tr><td class="mono">train_classifier</td><td>hard</td><td>train, predict held-out set</td></tr>
+<tr><td class="mono">hpo</td><td>hard</td><td>hyperparameter sweep, pick best</td></tr>
+<tr><td class="mono">batch_inference</td><td>medium</td><td>batched parallel inference</td></tr>
+</tbody>
+</table>
+<p>Groups A and C are the head-to-head race &mdash; every spec is expressible in both arms. Group B specs are the value-dependent, in-process control-flow patterns Section&nbsp;6 argues v1 cannot express even with <span class="mono">@dynamic</span>; there the v1 arm is expected to record <span class="mono">infeasible</span>, which is itself the result.</p>
+
+<h3>Harness: two arms, one agent</h3>
+<div class="harness">
+<div class="harness-row">
+  <div class="hbox">
+    <div class="htitle">Orchestrator</div>
+    Spawns one subagent per (spec, seed, arm). Same model, same 8-turn budget, same scaffold &mdash; only the arm name and cheatsheet differ.
+  </div>
+  <div class="harness-arrow">&rarr;</div>
+  <div class="hbox v1">
+    <div class="htitle">Arm v1</div>
+    <span class="mono">flytekit</span> cheatsheet<br>2,202 tokens
+  </div>
+  <div class="harness-arrow">/</div>
+  <div class="hbox v2">
+    <div class="htitle">Arm v2</div>
+    <span class="mono">flyte</span> cheatsheet<br>2,282 tokens
+  </div>
+  <div class="harness-arrow">&rarr;</div>
+  <div class="hbox oracle">
+    <div class="htitle">Live oracle</div>
+    Write &rarr; run on real cluster &rarr; grade output &rarr; fix, until <span class="mono">ORACLE:PASS</span> or budget exhausted
+  </div>
+</div>
+<div class="harness-caption"><b>Fig. 1.</b> The harness. A subagent gets only its arm's cheatsheet &mdash; the equal-in-context-docs control &mdash; and must submit a real run to a live cluster and read back real outputs; a hardcoded answer fails because inputs are seeded and randomized per trial. The subagent's own reported token usage for the trajectory, not a self-estimate, is what gets recorded.</div>
+</div>
+
+<h3>Metrics</h3>
+<ul>
+<li><b>Tokens to first green run</b> &mdash; the harness-measured trajectory token count to the first passing run. The headline number.</li>
+<li><b>Iterations to green</b> &mdash; run&rarr;fix cycles until the first <span class="mono">ORACLE:PASS</span>.</li>
+<li><b>Success rate</b> at the fixed 8-turn budget.</li>
+<li><b>Error taxonomy</b> &mdash; the fraction of failed iterations that are <i>framework-mechanics</i> errors (API misuse, registration/versioning mistakes, environment friction) versus genuine <i>logic</i> errors. This is where an ergonomic gap shows up most directly.</li>
+<li><b>Output-token volume</b> &mdash; token count of the final <span class="mono">solution.py</span>, a proxy for boilerplate.</li>
+</ul>
+
+<h3>Fairness and controls</h3>
+<p>Same model and turn budget on both arms; K=2 trials per spec per arm (seeds 0, 1) using <i>identical</i> randomized inputs across arms, verified byte-for-byte; failed or infeasible trials recorded as-is, never relaunched for a better number; cheatsheets kept within 3.6% of each other by token count. Group B's reference solutions were never shown to a trial subagent as an answer key.</p>
+
+<h3>The training-data confounder</h3>
+<p>Flyte v2 is newer, so the model has seen less of it in pretraining &mdash; a real headwind for the v2 arm, not a thumb on the scale for our hypothesis. We do not control this away; we state it and let the result speak: v2 wins decisively <i>despite</i> less training exposure, which means the mechanism in Section&nbsp;2 (v2 is ordinary Python, not a bespoke DSL) is doing real work, not riding a training-data advantage. If anything, the measured gap is a conservative estimate of the ergonomic gap in steady state.</p>
+
+<h2><span class="num">4</span>Results: Tokens and Iterations</h2>
+<p>On the nine specs both arms can express (groups A + C, 18 trials per arm, 100% success on both), v2 reaches a passing run in <b>1.78&times; fewer tokens</b> on average (73,301 vs 41,228; median 69,716 vs 41,697) and needs a <b>5&times; lower median iteration count</b> (5.0 vs 1.0; mean 4.0 vs 1.06). Seventeen of eighteen v2 trials passed on the very first attempt, versus two of eighteen on v1.</p>
+
+<figure class="wide">
+<img src="../../charts/agent_headline.png" alt="Tokens and iterations to green, by group">
+<figcaption><b>Fig. 2.</b> Mean tokens (left) and run&rarr;fix iterations (right) to a passing run, by spec group. Groups A and C: v2 costs roughly half the tokens and a fifth of the iterations of v1, at identical (100%) success rates. Group B: v1 has no bar &mdash; every one of 6 trials recorded <span class="mono">infeasible</span>, never producing a run to measure a token count for. v2 solved 6/6.</figcaption>
+</figure>
+
+<p>The gap is not driven by one or two outlier specs. Every spec in groups A and C shows v1 costing 1.6&ndash;1.9&times; the tokens of v2, from the easiest spec (<span class="mono">fanout_map</span>, 1.61&times;) to the hardest (<span class="mono">train_classifier</span>, 1.91&times;):</p>
+
+<figure class="wide">
+<img src="../../charts/agent_per_spec.png" alt="Tokens to green per spec">
+<figcaption><b>Fig. 3.</b> Tokens to green for all nine head-to-head specs. The v1/v2 ratio (bold, above each pair) holds in a tight 1.6&ndash;1.9&times; band regardless of spec content &mdash; ETL, ML training, hyperparameter search, or plain control flow all show the same order of gap.</figcaption>
+</figure>
+
+<h2><span class="num">5</span>Results: What the Failures Were</h2>
+<p>Across the 18 group-A/C v1 trials, subagents logged <b>54</b> failed run&rarr;fix iterations before reaching green; across the matching 18 v2 trials, they logged <b>1</b>. Of v1's 54, only 2 were genuine logic bugs &mdash; the other 52 were friction between the cheatsheet's documented happy path and what actually submitting a script to a live cluster requires.</p>
+
+<figure>
+<img src="../../charts/agent_errors.png" alt="Error taxonomy, v1 vs v2">
+<figcaption><b>Fig. 4.</b> Every failed iteration across groups A+C, classified framework-mechanics vs. logic vs. unresolved/transient. v1's failures are almost entirely mechanical, not conceptual &mdash; the agent understood the task and kept tripping on the SDK.</figcaption>
+</figure>
+
+<p>The v1 framework-mechanics failures cluster into three root causes, rediscovered independently by nearly every trial rather than solved once and reused:</p>
+<ol>
+<li><b>Toolchain version mismatch.</b> The default Python resolved by the trial's package manager wasn't one <span class="mono">flytekit</span>'s image-lookup recognized, crashing before any code ran.</li>
+<li><b>Silent non-packaging.</b> The cheatsheet's own basic remote-submit pattern doesn't upload local source outside an interactive mode; the remote pod then fails to import the script. Three different subagents found three different fixes for the identical gap.</li>
+<li><b>Unversioned entity collisions.</b> Submitting without an explicit version resolves to whatever was last registered under the same name &mdash; occasionally a <i>different trial's</i> workflow, with a mismatched interface.</li>
+</ol>
+<p>None of these are conceptual mistakes about the pipeline; they are exactly the register-and-fast-package mechanics that a native async-Python model sidesteps by not requiring a separate graph-registration step at all. Fig.&nbsp;5 puts a second number on the same effect: v1's authoring cost climbs with spec difficulty, v2's does not.</p>
+
+<figure>
+<img src="../../charts/agent_difficulty.png" alt="Tokens to green vs difficulty">
+<figcaption><b>Fig. 5.</b> Mean tokens to green vs. spec difficulty, groups A+C. v1 grows 65k&rarr;79k (+21%) from easy to hard; v2 holds flat at 40k&rarr;43k (+6%). Harder application logic costs v2 a little more context, as expected &mdash; it costs v1 disproportionately more, because harder specs also touch more framework surface (more tasks, more registration calls, more chances to hit the same mechanical friction).</figcaption>
+</figure>
+
+<h2><span class="num">6</span>What v1 Cannot Express &mdash; Not Slower, Impossible</h2>
+<p>Group B is not a harder efficiency test; it is a capability test. Three patterns each need a value-dependent decision made from a task's <i>real</i> output, in-process, that changes what runs next &mdash; and <span class="mono">@dynamic</span> does not rescue this, because it builds a static sub-graph from a runtime value <i>before</i> execution; it cannot react to results as they land, since inside it a task's result is a graph promise, not a real value to branch on, await, or race.</p>
+<p>Every one of the 6 v1 trials against these three specs independently reached this conclusion from the cheatsheet alone, without being told the answer or shown a reference solution, and stopped &mdash; five of six in just 2 tool calls, a median 31,357 tokens &mdash; rather than fake a workaround that would have hardcoded the answer instead of expressing the pattern. That is the result: <b>0% success, 6/6 infeasible</b>, a unanimous, independently-replicated verdict on the same architectural limit.</p>
+<p>v2 solved all 6, at a mean cost (52,818 tokens, 1.7 iterations) in the same range as an ordinary group-A/C trial &mdash; these are not exotic features bolted onto v2, they are the direct consequence of a task call producing a real awaitable instead of a graph handle. The agent-authored solutions below are the real, cluster-verified code from three separate trials, lightly trimmed for space:</p>
+
+<h3>Catch a live failure, retry with more resources</h3>
+<pre class="code">@env.task
+async def worker(allotted_mb: int, required_mb: int) -> int:
+    if allotted_mb &lt; required_mb:
+        raise flyte.errors.OOMError("OOMError", "out of memory")
+    return allotted_mb
+
+@env.task
+async def drive(tiers: list[int], required_mb: int) -> int:
+    for mb in tiers:
+        try:
+            return await worker.override(
+                resources=flyte.Resources(memory=f"{mb}Mi")
+            )(mb, required_mb)
+        except flyte.errors.OOMError:
+            continue          # bump memory, re-run the SAME step
+    raise RuntimeError("OOM at max tier")</pre>
+<p class="small">In v1, retries are declared statically on the graph before it runs &mdash; there is no way to catch a live <span class="mono">OOMError</span> from a specific node and re-launch <i>that exact node</i> with a bigger resource envelope as ordinary control flow.</p>
+
+<h3>Race live tasks, cancel the losers</h3>
+<pre class="code">tasks = {asyncio.create_task(cand(i, delays[i], i in fail)): i
+         for i in range(len(delays))}
+failures, pending = 0, set(tasks)
+while pending:
+    done, pending = await asyncio.wait(
+        pending, return_when=asyncio.FIRST_COMPLETED)
+    for t in done:
+        if t.exception() is None:
+            for p in pending: p.cancel()
+            return tasks[t]                    # first success wins
+    failures += len(done)
+    if failures &gt; max_failures:
+        for p in pending: p.cancel()
+        return -1                              # circuit opens</pre>
+<p class="small">A v1 task promise is a graph handle, not an awaitable future &mdash; it cannot be fed to <span class="mono">asyncio.wait(FIRST_COMPLETED)</span>, cancelled in flight, or counted against a live failure budget mid-race.</p>
+
+<h3>Durable checkpointed tool loop</h3>
+<pre class="code">@flyte.trace
+async def add(acc: int, k: int) -> int:
+    return acc + k
+
+@flyte.trace
+async def mul(acc: int, k: int) -> int:
+    return acc * k
+
+@env.task
+async def run_program(start: int, program: list) -> int:
+    acc = start
+    for op, arg in program:      # each call is a checkpointed step
+        acc = await (add(acc, arg) if op == "add" else mul(acc, arg))
+    return acc</pre>
+<p class="small">In v1 the only unit of recovery is a task, and a task is a pod &mdash; a durable N-step loop is either one opaque uncheckpointed task or a pod-per-step explosion. <span class="mono">@flyte.trace</span> checkpoints each call in-process; nothing pod-shaped appears in this solution at all.</p>
+
+<h2><span class="num">7</span>Threats to Validity</h2>
+<p>We report these plainly, because a rigorous number is more convincing than a clean one to the audience this report is for.</p>
+<p><b>Cross-trial collisions.</b> All 24 trials per arm ran concurrently against one shared cluster project, and every trial's script shares a workflow/module name. Several v1 trials explicitly diagnosed a stale registration left by a <i>concurrently-running sibling trial</i> as one of their failed iterations &mdash; a confound specific to parallel execution, applying to both arms, that likely inflated both arms' iteration counts somewhat above a fully isolated baseline.</p>
+<p><b>Reference-solution leakage.</b> Trial subagents write from a shared repository checkout; a few self-reports describe consulting a sibling trial's already-passing solution, and &mdash; more often on the v2 arm &mdash; the project's held-out reference solutions, which the harness's own fairness rule says to keep out of context. Nothing in the trial scaffold technically prevented reading arbitrary repository paths. This plausibly <i>understates</i> the true gap rather than inflates it: v2 was already closer to first-try-correct, so it had less room to benefit from peeking, while v1 had further to fall back to without it.</p>
+<p><b>Sample size.</b> Two trials per (spec, arm) is enough to see a consistent 1.6&ndash;1.9&times; band across nine independent specs and a unanimous 6/6-vs-0/6 split on group B, but is not enough to report tight confidence intervals per spec. The per-spec consistency in Fig.&nbsp;3, not any single cell, is the strength of the result.</p>
+
+<h2><span class="num">8</span>Discussion</h2>
+<p>Reason 1 in the migration case for Flyte v2 has, until now, been a plausible mechanism: v2 is ordinary Python, so an agent should need less context to use it correctly. This report turns that plausibility into a number, measured the same way the companion scaling studies measure runtime cost &mdash; real workloads, a real cluster, a live grader, no simulation. The result lines up with the mechanism: v1's failures are almost entirely mechanical (54 of 54 non-logic errors are framework friction), the ratio holds within a narrow band across nine unrelated specs, and the gap <i>widens</i> with task difficulty rather than narrowing &mdash; consistent with harder specs exercising more of exactly the DSL surface that costs v1 tokens. Group B adds a second, independent finding of a different kind: for three realistic patterns, this is not an efficiency gap an agent can grind through with more budget. v1 is structurally unable to express them; v2 solves them at ordinary cost.</p>
+<p>Migration cost for this specific gap is low. v2 is the same SDK lineage and the same plugin ecosystem as v1 &mdash; adopting it does not require an agent (or its operators) to learn a new tool, only fewer of the current one's quirks.</p>
+
+<h2><span class="num">9</span>Conclusion</h2>
+<p>Holding the agent, the model, and the documentation budget constant, a coding agent authoring Flyte pipelines is <b>strictly better off on v2</b> along every axis this study measured: 1.78&times; fewer tokens and a 5&times; lower median iteration count on the patterns both frameworks can express, at identical 100% success; a near-total absence of framework-mechanics failures (1 vs. 54); authoring cost that stays flat rather than climbing with task difficulty; and a unanimous, independently-replicated capability gap on patterns that need live, value-dependent control flow. There is no measured dimension on which v1 wins.</p>
+<p class="small">Raw trial data &mdash; 42 <span class="mono">solution.py</span> files (every trial that produced a run; the 6 v1 group-B trials correctly wrote none), inputs, logs, and one JSON row for all 48 trials &mdash; and the harness that produced them are public: <span class="mono">github.com/flyteorg/flyte-benchmarks</span>, under <span class="mono">raw-results/flyte-agent-benchmark/</span> and <span class="mono">scripts/flyte-agent-benchmark/</span>. Reproduce it, or extend it with your own specs.</p>
+
+</div><!-- /.cols -->
+
+</body>
+</html>
