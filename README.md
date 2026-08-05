@@ -7,7 +7,8 @@ and collects wall-clock, peak memory, and OOM results.
 **Papers:**
 [Flyte v1 vs v2](pdfs/flyte_v1_v2_paper.pdf) ·
 [Flyte v2 vs Union](pdfs/flyte_oss_vs_union_paper.pdf) ·
-[Reusable containers](pdfs/union_reusable_containers.pdf)
+[Reusable containers](pdfs/union_reusable_containers.pdf) ·
+[Agent authoring cost, v1 vs v2](pdfs/flyte_agent_benchmark_paper.pdf)
 
 This repo is a Claude Code **plugin marketplace** (`flyte-benchmarks`) hosting one plugin
 (`flyte-benchmark`). You can install it through Claude Code, or just clone the repo
@@ -98,6 +99,25 @@ Peak orchestrator memory is the other half of the story: down a 500-node chain
 v1 grows 1,272 → 1,589 MiB while v2 stays flat at 298 → 327 MiB. Union's orchestrator is
 hosted and multi-tenant, so a pod-RSS number there isn't comparable and is not
 reported.
+
+### Agent authoring cost — v1 vs v2
+
+A companion study to the scaling numbers above: with a coding agent authoring
+the pipelines, not a human, does v2's Pythonic model actually cost fewer tokens
+and iterations to reach a working pipeline? [48 real trial trajectories](raw-results/flyte-agent-benchmark/),
+one live subagent run per trial against a real cluster, say yes — decisively, and
+on patterns v1 can't express at all it isn't close. Full report:
+[`flyte_agent_benchmark_paper.pdf`](pdfs/flyte_agent_benchmark_paper.pdf); numbers and methodology in
+[`reference_results.md`](flyte-benchmark/skills/flyte-agent-benchmark/reference_results.md).
+
+![Agent authoring cost — Flyte v1 vs v2, tokens and iterations to a passing run](charts/agent_headline.png)
+
+On the nine specs both frameworks can express, v2 reaches a passing run in
+**1.78× fewer tokens** and a **5× lower iteration count**, at identical 100%
+success. On three patterns that need a live, value-dependent decision — catch
+an OOM and retry with more memory, race concurrent tasks with cancellation, a
+durable checkpointed tool loop — v1 recorded **0% success (6/6 infeasible)**
+while v2 solved **6/6**: not an efficiency gap, a capability one.
 
 ---
 
