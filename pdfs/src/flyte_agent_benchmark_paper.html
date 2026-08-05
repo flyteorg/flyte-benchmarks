@@ -47,8 +47,9 @@
   figcaption b { color: #000; }
 
   /* ---------- tables ---------- */
-  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 0.4em 0 0.8em 0; break-inside: avoid; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.2pt; margin: 0.4em 0 0.8em 0; break-inside: avoid; }
   table.wide { column-span: all; }
+  table.compact th, table.compact td { padding: 2.5px 5px; line-height: 1.22; }
   caption { caption-side: top; font-size: 8.3pt; text-align: left; margin-bottom: 0.3em; font-weight: 700; }
   th, td { padding: 3px 7px; text-align: left; vertical-align: top; border-bottom: 0.6px solid #ccc; }
   thead th { border-bottom: 1.3px solid #333; font-weight: 700; }
@@ -90,21 +91,23 @@
   .callout.punch { background: #fff8e6; border-color: #e0c56b; }
   .callout b.head { color: #5a27db; }
 
-  /* ---------- harness diagram (Fig 1 analog) ---------- */
-  .harness { column-span: all; margin: 0.35em 0 0.9em 0; break-inside: avoid; }
-  .harness-row { display: flex; gap: 0.35em; align-items: stretch; justify-content: center; flex-wrap: nowrap; }
+  /* ---------- harness diagram (Fig 1 analog) — single-column vertical flow ---------- */
+  .harness { margin: 0.3em 0 0.7em 0; break-inside: avoid; }
+  .harness-col { display: flex; flex-direction: column; align-items: stretch; }
+  .harness-pair { display: flex; gap: 0.28em; }
   .hbox {
-    border: 1px solid #999; border-radius: 4px; padding: 0.4em 0.55em;
-    font-size: 8.3pt; flex: 1; text-align: center; background: #fff;
+    border: 1px solid #999; border-radius: 4px; padding: 0.3em 0.4em;
+    font-size: 7.3pt; line-height: 1.28; text-align: center; background: #fff;
   }
-  .hbox .htitle { font-weight: 700; font-size: 8.6pt; margin-bottom: 0.2em; }
+  .hbox.pair { flex: 1; }
+  .hbox .htitle { font-weight: 700; font-size: 7.6pt; margin-bottom: 0.12em; }
   .hbox.v1 { border-color: #a787ff; background: #f7f4ff; }
   .hbox.v1 .htitle { color: #6b4fc9; }
   .hbox.v2 { border-color: #5a27db; background: #f2edfc; }
   .hbox.v2 .htitle { color: #5a27db; }
   .hbox.oracle { border-color: #444; background: #fafafa; }
-  .harness-arrow { align-self: center; font-size: 14pt; color: #888; padding: 0 0.15em; }
-  .harness-caption { font-size: 8.3pt; color: #222; margin-top: 0.45em; line-height: 1.32; }
+  .harness-arrow-v { text-align: center; font-size: 11pt; color: #888; line-height: 1; margin: 0.02em 0; }
+  .harness-caption { font-size: 8.3pt; color: #222; margin-top: 0.4em; line-height: 1.32; }
 
   .small { font-size: 8.6pt; color: #444; }
   .mono { font-family: "SF Mono", Menlo, Consolas, monospace; }
@@ -153,43 +156,45 @@
 
 <h3>Task suite</h3>
 <p>Twelve framework-agnostic specs, written in plain language and never naming a Flyte API, graded easy&rarr;hard in three groups:</p>
-<table>
+<table class="compact">
+<colgroup><col style="width:20%"><col style="width:27%"><col style="width:12%"><col style="width:41%"></colgroup>
 <thead><tr><th>Group</th><th>Spec</th><th>Diff.</th><th>Tests</th></tr></thead>
 <tbody>
-<tr><td rowspan="5">A &mdash; core mechanics</td><td class="mono">etl</td><td>easy</td><td>task&rarr;task, passing outputs</td></tr>
-<tr><td class="mono">fanout_map</td><td>easy</td><td>static fan-out / map</td></tr>
+<tr><td rowspan="5">A &mdash; core</td><td class="mono">etl</td><td>easy</td><td>chain two tasks</td></tr>
+<tr><td class="mono">fanout_map</td><td>easy</td><td>static fan-out</td></tr>
 <tr><td class="mono">conditional</td><td>medium</td><td>runtime branch</td></tr>
-<tr><td class="mono">dynamic_fanout</td><td>medium</td><td>data-dependent width</td></tr>
-<tr><td class="mono">fit_eval</td><td>hard</td><td>multi-stage, named outputs</td></tr>
-<tr><td rowspan="3">B &mdash; v2-only capability</td><td class="mono">oom_retry</td><td>hard</td><td>catch OOM, retry w/ more mem</td></tr>
-<tr><td class="mono">circuit_breaker</td><td>hard</td><td>race live tasks, cancel losers</td></tr>
-<tr><td class="mono">agent_loop</td><td>hard</td><td>durable checkpointed tool loop</td></tr>
-<tr><td rowspan="4">C &mdash; applied ML</td><td class="mono">etl_join</td><td>medium</td><td>record ETL, join, group-by</td></tr>
-<tr><td class="mono">train_classifier</td><td>hard</td><td>train, predict held-out set</td></tr>
-<tr><td class="mono">hpo</td><td>hard</td><td>hyperparameter sweep, pick best</td></tr>
-<tr><td class="mono">batch_inference</td><td>medium</td><td>batched parallel inference</td></tr>
+<tr><td class="mono">dynamic_fanout</td><td>medium</td><td>data-dep. width</td></tr>
+<tr><td class="mono">fit_eval</td><td>hard</td><td>multi-stage outputs</td></tr>
+<tr><td rowspan="3">B &mdash; v2-only</td><td class="mono">oom_retry</td><td>hard</td><td>catch OOM, retry</td></tr>
+<tr><td class="mono">circuit_breaker</td><td>hard</td><td>race, cancel losers</td></tr>
+<tr><td class="mono">agent_loop</td><td>hard</td><td>checkpointed loop</td></tr>
+<tr><td rowspan="4">C &mdash; applied ML</td><td class="mono">etl_join</td><td>medium</td><td>join + group-by</td></tr>
+<tr><td class="mono">train_classifier</td><td>hard</td><td>train + predict</td></tr>
+<tr><td class="mono">hpo</td><td>hard</td><td>sweep, pick best</td></tr>
+<tr><td class="mono">batch_inference</td><td>medium</td><td>batched inference</td></tr>
 </tbody>
 </table>
 <p>Groups A and C are the head-to-head race &mdash; every spec is expressible in both arms. Group B specs are the value-dependent, in-process control-flow patterns Section&nbsp;6 argues v1 cannot express even with <span class="mono">@dynamic</span>; there the v1 arm is expected to record <span class="mono">infeasible</span>, which is itself the result.</p>
 
 <h3>Harness: two arms, one agent</h3>
 <div class="harness">
-<div class="harness-row">
+<div class="harness-col">
   <div class="hbox">
     <div class="htitle">Orchestrator</div>
-    Spawns one subagent per (spec, seed, arm). Same model, same 8-turn budget, same scaffold &mdash; only the arm name and cheatsheet differ.
+    Spawns one subagent per (spec, seed, arm) &mdash; same model, same 8-turn budget, same scaffold; only the arm name and cheatsheet differ.
   </div>
-  <div class="harness-arrow">&rarr;</div>
-  <div class="hbox v1">
-    <div class="htitle">Arm v1</div>
-    <span class="mono">flytekit</span> cheatsheet<br>2,202 tokens
+  <div class="harness-arrow-v">&darr;</div>
+  <div class="harness-pair">
+    <div class="hbox v1 pair">
+      <div class="htitle">Arm v1</div>
+      <span class="mono">flytekit</span><br>2,202 tok
+    </div>
+    <div class="hbox v2 pair">
+      <div class="htitle">Arm v2</div>
+      <span class="mono">flyte</span><br>2,282 tok
+    </div>
   </div>
-  <div class="harness-arrow">/</div>
-  <div class="hbox v2">
-    <div class="htitle">Arm v2</div>
-    <span class="mono">flyte</span> cheatsheet<br>2,282 tokens
-  </div>
-  <div class="harness-arrow">&rarr;</div>
+  <div class="harness-arrow-v">&darr;</div>
   <div class="hbox oracle">
     <div class="htitle">Live oracle</div>
     Write &rarr; run on real cluster &rarr; grade output &rarr; fix, until <span class="mono">ORACLE:PASS</span> or budget exhausted
