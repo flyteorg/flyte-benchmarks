@@ -62,22 +62,27 @@ p { margin: 0; }
 .nav-links { display: flex; align-items: center; gap: 28px; font-size: 14.5px; font-weight: 600; }
 .nav-links a { text-decoration: none; color: var(--ink-dim); transition: color .15s; }
 .nav-links a:hover { color: var(--ink); }
-.nav-cta { margin-left: 4px; }
+.nav-links a.nav-cta { margin-left: 4px; color: var(--accent-ink); }
+.nav-links a.nav-cta:hover { color: var(--accent-ink); }
 
 /* ---------- buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
   font-family: var(--font-display); font-weight: 700; font-size: 15px;
-  padding: 11px 20px; border-radius: 8px; text-decoration: none;
+  padding: 11px 22px; border-radius: 999px; text-decoration: none;
   border: 1px solid transparent; cursor: pointer; white-space: nowrap;
   transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
 }
 .btn:hover { transform: translateY(-1px); }
-.btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 1px 0 rgba(0,0,0,.2), 0 0 0 0 var(--accent); }
+.btn-primary {
+  background: var(--accent); color: var(--accent-ink);
+  background-image: linear-gradient(180deg, rgba(255,255,255,.24), transparent);
+  box-shadow: 0 1px 0 rgba(0,0,0,.2), 0 0 0 0 var(--accent);
+}
 .btn-primary:hover { box-shadow: 0 6px 24px -6px var(--accent); }
 .btn-ghost { background: transparent; border-color: var(--border); color: var(--ink); }
 .btn-ghost:hover { border-color: var(--accent); }
-.btn-sm { padding: 8px 14px; font-size: 13.5px; border-radius: 7px; }
+.btn-sm { padding: 8px 16px; font-size: 13.5px; }
 .btn svg { width: 15px; height: 15px; }
 
 /* ---------- hero ---------- */
@@ -106,14 +111,14 @@ hr.rule { border: none; height: 1px; background: var(--border-soft); margin: 0; 
 /* ---------- abstract ---------- */
 .abstract {
   border: 1px solid var(--border); border-left: 3px solid var(--series-b);
-  background: var(--bg-elev); border-radius: 10px;
+  background: var(--bg-elev); border-radius: 16px;
   padding: 26px 28px; font-size: 16.5px; line-height: 1.7; color: var(--ink-dim);
 }
 .abstract b { color: var(--ink); }
 .abstract .label { display: block; font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--series-b); font-weight: 700; margin-bottom: 12px; }
 
 /* ---------- stat row ---------- */
-.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 .stat { background: var(--bg-elev); padding: 22px 22px 20px; }
 .stat .num { font-family: var(--font-mono); font-weight: 600; font-size: clamp(26px, 3.4vw, 36px); color: var(--ink); display: block; letter-spacing: -0.01em; }
 .stat .num.accent { color: var(--series-b); }
@@ -121,7 +126,7 @@ hr.rule { border: none; height: 1px; background: var(--border-soft); margin: 0; 
 .stat .lbl { font-size: 13.5px; color: var(--ink-faint); margin-top: 6px; line-height: 1.4; }
 
 /* ---------- figure / chart cards ---------- */
-.figure { border: 1px solid var(--border); background: var(--bg-elev); border-radius: 14px; padding: 26px 26px 22px; margin-top: 20px; opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
+.figure { border: 1px solid var(--border); background: var(--bg-elev); border-radius: 18px; padding: 26px 26px 22px; margin-top: 20px; opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
 .figure.in-view { opacity: 1; transform: none; }
 .figure-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
 .figure-title { font-family: var(--font-display); font-weight: 700; font-size: 18px; }
@@ -141,7 +146,7 @@ hr.rule { border: none; height: 1px; background: var(--border-soft); margin: 0; 
 
 .tooltip {
   position: absolute; pointer-events: none; z-index: 10;
-  background: var(--bg-elev2); border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-elev2); border: 1px solid var(--border); border-radius: 10px;
   padding: 8px 11px; font-family: var(--font-mono); font-size: 12.5px; color: var(--ink);
   box-shadow: 0 10px 30px -8px rgba(0,0,0,.6);
   opacity: 0; transform: translate(-50%, -6px); transition: opacity .1s ease;
@@ -162,15 +167,15 @@ pre.code .s { color: var(--spark); }
 
 /* ---------- CTA band ---------- */
 .cta-band {
-  border-top: 1px solid var(--border-soft);
-  border-bottom: 1px solid var(--border-soft);
-  background: radial-gradient(ellipse 60% 100% at 50% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent);
-  padding: 64px 0;
+  background: var(--dark-band-bg);
+  color: var(--dark-band-ink);
+  background-image: radial-gradient(ellipse 60% 120% at 50% 0%, color-mix(in srgb, var(--accent) 20%, transparent), transparent);
+  padding: 68px 0;
   text-align: center;
 }
 .cta-band h2 { font-size: clamp(24px, 3.4vw, 34px); max-width: 26ch; margin: 0 auto; }
-.cta-band p { color: var(--ink-dim); margin: 14px auto 0; max-width: 52ch; font-size: 16.5px; }
-.cta-band .btn { margin-top: 26px; padding: 14px 26px; font-size: 16px; }
+.cta-band p { color: var(--dark-band-ink-dim); margin: 14px auto 0; max-width: 52ch; font-size: 16.5px; }
+.cta-band .btn { margin-top: 26px; padding: 14px 28px; font-size: 16px; }
 
 /* ---------- footer ---------- */
 footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
@@ -183,7 +188,7 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
 .bench-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
 .bench-card {
   display: block; text-decoration: none; color: var(--ink);
-  border: 1px solid var(--border); background: var(--bg-elev); border-radius: 14px;
+  border: 1px solid var(--border); background: var(--bg-elev); border-radius: 18px;
   padding: 26px; position: relative; overflow: hidden;
   transition: border-color .2s ease, transform .2s ease;
 }

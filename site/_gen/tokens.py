@@ -19,18 +19,39 @@ def load_b64(name):
 
 FONT_FACES = """
 @font-face {{
-  font-family: 'Inter';
-  font-weight: 400 800;
+  font-family: 'Instrument Sans';
+  font-weight: 400 700;
   font-style: normal;
   font-display: swap;
-  src: url(data:font/woff2;base64,{inter}) format('woff2');
+  src: url(data:font/ttf;base64,{instrument}) format('truetype');
 }}
 @font-face {{
-  font-family: 'Manrope';
-  font-weight: 400 800;
+  font-family: 'Instrument Sans';
+  font-weight: 400 700;
+  font-style: italic;
+  font-display: swap;
+  src: url(data:font/ttf;base64,{instrument_italic}) format('truetype');
+}}
+@font-face {{
+  font-family: 'Yellix';
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
-  src: url(data:font/woff2;base64,{manrope}) format('woff2');
+  src: url(data:font/otf;base64,{yellix_regular}) format('opentype');
+}}
+@font-face {{
+  font-family: 'Yellix';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url(data:font/otf;base64,{yellix_medium}) format('opentype');
+}}
+@font-face {{
+  font-family: 'Yellix';
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+  src: url(data:font/otf;base64,{yellix_semibold}) format('opentype');
 }}
 @font-face {{
   font-family: 'IBM Plex Mono';
@@ -47,8 +68,11 @@ FONT_FACES = """
   src: url(data:font/woff2;base64,{plexmono600}) format('woff2');
 }}
 """.format(
-    inter=load_b64("inter"),
-    manrope=load_b64("manrope"),
+    instrument=load_b64("instrument-sans"),
+    instrument_italic=load_b64("instrument-sans-italic"),
+    yellix_regular=load_b64("yellix-regular"),
+    yellix_medium=load_b64("yellix-medium"),
+    yellix_semibold=load_b64("yellix-semibold"),
     plexmono400=load_b64("plexmono-400"),
     plexmono600=load_b64("plexmono-600"),
 )
@@ -61,25 +85,33 @@ FLYTE = dict(
     home_url="https://flyte.org",
     benchmarks_url="https://claude.ai/code/artifact/f038a17a-6188-4462-beaf-831272d81a8d",
     devbox_url="https://flyte.org/devbox",
-    bg="#050310",
-    bg_elev="#0d0a1c",
-    bg_elev2="#161129",
-    border="#2a2340",
-    border_soft="#1c1730",
-    ink="#f2eefc",
-    ink_dim="#a79fc4",
-    ink_faint="#7a7297",
-    accent="#8c4fff",
-    accent_2="#6f2aef",
+    # flyte.org's 2026 redesign is light-mode-primary (white pages, a dark
+    # violet band for its "Introducing Flyte 2" section) -- matched here from
+    # the live site's Webflow custom properties, not guessed.
+    bg="#ffffff",
+    bg_elev="#f6f5fb",
+    bg_elev2="#ece9f5",
+    border="#e3e0ee",
+    border_soft="#ece9f5",
+    ink="#15141d",
+    ink_dim="#4b4760",
+    ink_faint="#83818c",
+    accent="#6f2aef",
+    accent_2="#8c4fff",
     accent_ink="#ffffff",
     spark="#ffbc1d",
-    series_a="#a78bfa",   # "Flyte" / v1 -- shared throughline color
-    series_b="#8c4fff",   # v2 -- this site's accent
-    bad="#ff6b5e",
-    font_display="Inter",
-    font_body="Inter",
+    series_a="#9c85d6",   # "Flyte" / v1 -- shared throughline color, deepened for a white ground
+    series_b="#6f2aef",   # v2 -- this site's real brand purple
+    bad="#d33c2f",
+    font_display="Instrument Sans",
+    font_body="Instrument Sans",
     font_mono="IBM Plex Mono",
-    grid_line="#1c1730",
+    grid_line="#efedf7",
+    # flyte.org alternates light sections with a solid near-black violet band
+    # (its "Introducing Flyte 2" section) -- used for the CTA band here.
+    dark_band_bg="#050310",
+    dark_band_ink="#ffffff",
+    dark_band_ink_dim="#b9b3d6",
 )
 
 UNION = dict(
@@ -89,23 +121,27 @@ UNION = dict(
     home_url="https://www.union.ai",
     benchmarks_url="https://claude.ai/code/artifact/8725c417-889b-4364-adb5-6c21a931f094",
     devbox_url="https://www.union.ai/get-devbox",
-    bg="#0d0f12",
-    bg_elev="#15181b",
-    bg_elev2="#1d2125",
-    border="#2b3035",
-    border_soft="#1d2226",
-    ink="#eef2f5",
-    ink_dim="#9aa3ab",
-    ink_faint="#6c757d",
-    accent="#3378f5",
-    accent_2="#1648b8",
-    accent_ink="#ffffff",
-    spark="#fcb51f",
+    bg="#18191a",
+    bg_elev="#202226",
+    bg_elev2="#2a2c31",
+    border="#34373c",
+    border_soft="#26282c",
+    ink="#f2f3f5",
+    ink_dim="#a3a8ae",
+    ink_faint="#75797f",
+    accent="#fcb51f",     # union.ai's real CTA is a solid gold pill, not blue
+    accent_2="#e8a30f",
+    accent_ink="#15130a",
+    spark="#3378f5",
     series_a="#a78bfa",   # "Flyte (OSS)" -- shared throughline color
     series_b="#fcb51f",   # Union -- this site's real brand gold
     bad="#ef5757",
-    font_display="Manrope",
-    font_body="Manrope",
+    font_display="Yellix",
+    font_body="Yellix",
     font_mono="IBM Plex Mono",
-    grid_line="#1d2226",
+    grid_line="#26282c",
+    # union.ai is already dark end-to-end -- the "band" is the same surface.
+    dark_band_bg="#18191a",
+    dark_band_ink="#f2f3f5",
+    dark_band_ink_dim="#a3a8ae",
 )
