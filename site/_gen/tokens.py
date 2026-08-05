@@ -83,7 +83,7 @@ FLYTE = dict(
     site_label="Flyte",
     site_tagline="Open source",
     home_url="https://flyte.org",
-    benchmarks_url="https://claude.ai/code/artifact/f038a17a-6188-4462-beaf-831272d81a8d",
+    benchmarks_url="/benchmarks",
     devbox_url="https://flyte.org/devbox",
     # flyte.org's 2026 redesign is light-mode-primary (white pages, a dark
     # violet band for its "Introducing Flyte 2" section) -- matched here from
@@ -119,7 +119,7 @@ UNION = dict(
     site_label="Union",
     site_tagline="Managed platform",
     home_url="https://www.union.ai",
-    benchmarks_url="https://claude.ai/code/artifact/8725c417-889b-4364-adb5-6c21a931f094",
+    benchmarks_url="/benchmarks",
     devbox_url="https://www.union.ai/get-devbox",
     bg="#18191a",
     bg_elev="#202226",

@@ -112,15 +112,16 @@ ENGINE_JS = r"""
         var bx = gx - (s * barW) / 2 + si * barW + barW * 0.08;
         var bw = barW * 0.84;
         if (v === null || v === undefined){
-          var by = padT + innerH - 2;
-          // Give the label the full half-group it sits in (not just its own
-          // narrow bar-slot) so it clears a sibling bar in the same group --
-          // a bar-slot-centered label collides with a neighbor once there
-          // are 3+ categories and the group narrows.
-          var anchor = 'middle', lx = gx;
-          if (s > 1 && si === 0){ anchor = 'end'; lx = gx - 5; }
-          else if (s > 1 && si === s - 1){ anchor = 'start'; lx = gx + 5; }
-          var txt = el('text', { x: lx, y: by - 6, class: 'oom-label', 'text-anchor': anchor });
+          var by = padT + innerH - 4;
+          var lx = bx + bw/2;
+          // Vertical (reads bottom-to-top from the baseline) so the label's
+          // footprint is just its font size wide, not its text length --
+          // clears a sibling bar in the same group even on narrow, 3+
+          // category charts.
+          var txt = el('text', {
+            x: lx, y: by, class: 'oom-label', 'text-anchor': 'start',
+            transform: 'rotate(-90 ' + lx + ' ' + by + ')'
+          });
           txt.textContent = opts.oomText || 'N/A';
           svg.appendChild(txt);
           return;
@@ -142,7 +143,7 @@ ENGINE_JS = r"""
         setTimeout(function(l){ l.style.transition = 'opacity .4s'; l.setAttribute('opacity', 1); }, 500, lbl);
 
         rect.addEventListener('mousemove', function(e){
-          showTip(e, '<span class="k">' + s0.label + '</span>&nbsp; <b>' + (opts.barFmt ? opts.barFmt(v) : v) + (opts.unit||'') + '</b>', host);
+          showTip(e, '<span class="k">' + s0.label + '</span>&nbsp; <b>' + (opts.barFmt ? opts.barFmt(v) : v) + '</b>', host);
         });
         rect.addEventListener('mouseleave', hideTip);
         rect.style.cursor = 'pointer';
@@ -216,7 +217,11 @@ ENGINE_JS = r"""
       var lastGood = validIdx[validIdx.length - 1];
       if (lastGood !== undefined && lastGood < s0.values.length - 1){
         var lp = xy(lastGood, s0.values[lastGood]);
-        var mark = el('text', { x: lp[0] + 8, y: lp[1] - 8, class: 'axis-label', fill: 'var(--bad)' });
+        var mx = lp[0] + 10, my = lp[1] - 4;
+        var mark = el('text', {
+          x: mx, y: my, class: 'oom-label', 'text-anchor': 'start',
+          transform: 'rotate(-90 ' + mx + ' ' + my + ')'
+        });
         mark.textContent = opts.oomText || 'OOM';
         svg.appendChild(mark);
       }

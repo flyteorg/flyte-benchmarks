@@ -218,10 +218,10 @@ hr.rule { border: none; height: 1px; background: var(--border-soft); margin: 0; 
 
 .chart-wrap { position: relative; margin-top: 14px; }
 .chart-wrap svg { width: 100%; height: auto; display: block; overflow: visible; }
-.axis-label { fill: var(--ink-faint); font-family: var(--font-mono); font-size: 10.5px; }
+.axis-label { fill: var(--ink-faint); font-family: var(--font-mono); font-size: 9px; }
 .grid-line { stroke: var(--border-soft); stroke-width: 1; }
-.bar-label { fill: var(--ink); font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-anchor: middle; }
-.oom-label { fill: var(--bad); font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-anchor: middle; }
+.bar-label { fill: var(--ink); font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; text-anchor: middle; }
+.oom-label { fill: var(--bad); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: .02em; }
 
 .tooltip {
   position: absolute; pointer-events: none; z-index: 10;
@@ -293,7 +293,7 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
 </head>
 <body>
 
-<div class="nav"><div class="wrap nav-row"><a class="nav-brand" href="https://claude.ai/code/artifact/f038a17a-6188-4462-beaf-831272d81a8d"><svg class="nav-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--series-b)"/><path d="M2 17L12 22L22 17" stroke="var(--ink-dim)" stroke-width="1.6" fill="none"/><path d="M2 12L12 17L22 12" stroke="var(--series-b)" stroke-width="1.6" fill="none"/></svg>flyte.org <span class="nav-crumb">/ Outscaling Flyte v1</span></a><div class="nav-links"><a href="https://flyte.org">flyte.org</a><a href="https://claude.ai/code/artifact/f038a17a-6188-4462-beaf-831272d81a8d">Benchmarks</a><a href="https://www.union.ai">union.ai &#8599;</a><a class="btn btn-primary btn-sm nav-cta" href="https://flyte.org/devbox">Try the Devbox</a></div></div></div>
+<div class="nav"><div class="wrap nav-row"><a class="nav-brand" href="/benchmarks"><svg class="nav-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--series-b)"/><path d="M2 17L12 22L22 17" stroke="var(--ink-dim)" stroke-width="1.6" fill="none"/><path d="M2 12L12 17L22 12" stroke="var(--series-b)" stroke-width="1.6" fill="none"/></svg>flyte.org <span class="nav-crumb">/ Outscaling Flyte v1</span></a><div class="nav-links"><a href="https://flyte.org">flyte.org</a><a href="/benchmarks">Benchmarks</a><a href="https://www.union.ai">union.ai &#8599;</a><a class="btn btn-primary btn-sm nav-cta" href="https://flyte.org/devbox">Try the Devbox</a></div></div></div>
 <main>
   <section class="hero bg-grid">
     <div class="wrap">
@@ -332,7 +332,7 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
 
   <div class="cta-band"><div class="wrap"><h2>See it for yourself</h2><p>Spin up a real Flyte cluster in minutes and run the same workloads on your own hardware. No infra to provision, no YAML to write first.</p><a class="btn btn-primary" href="https://flyte.org/devbox">Try the Devbox &rarr;</a></div></div>
 </main>
-<footer><div class="wrap footer-row"><div>Flyte Benchmarks &mdash; reproducible orchestration studies. <a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener">Source &amp; raw data on GitHub &#8599;</a></div><div class="footer-links"><a href="https://claude.ai/code/artifact/f038a17a-6188-4462-beaf-831272d81a8d">All flyte.org benchmarks</a><a href="https://www.union.ai">union.ai</a><a href="https://flyte.org/devbox">Try the Devbox</a></div></div></footer>
+<footer><div class="wrap footer-row"><div>Flyte Benchmarks &mdash; reproducible orchestration studies. <a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener">Source &amp; raw data on GitHub &#8599;</a></div><div class="footer-links"><a href="/benchmarks">All flyte.org benchmarks</a><a href="https://www.union.ai">union.ai</a><a href="https://flyte.org/devbox">Try the Devbox</a></div></div></footer>
 
 <script>
 
@@ -446,15 +446,16 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
         var bx = gx - (s * barW) / 2 + si * barW + barW * 0.08;
         var bw = barW * 0.84;
         if (v === null || v === undefined){
-          var by = padT + innerH - 2;
-          // Give the label the full half-group it sits in (not just its own
-          // narrow bar-slot) so it clears a sibling bar in the same group --
-          // a bar-slot-centered label collides with a neighbor once there
-          // are 3+ categories and the group narrows.
-          var anchor = 'middle', lx = gx;
-          if (s > 1 && si === 0){ anchor = 'end'; lx = gx - 5; }
-          else if (s > 1 && si === s - 1){ anchor = 'start'; lx = gx + 5; }
-          var txt = el('text', { x: lx, y: by - 6, class: 'oom-label', 'text-anchor': anchor });
+          var by = padT + innerH - 4;
+          var lx = bx + bw/2;
+          // Vertical (reads bottom-to-top from the baseline) so the label's
+          // footprint is just its font size wide, not its text length --
+          // clears a sibling bar in the same group even on narrow, 3+
+          // category charts.
+          var txt = el('text', {
+            x: lx, y: by, class: 'oom-label', 'text-anchor': 'start',
+            transform: 'rotate(-90 ' + lx + ' ' + by + ')'
+          });
           txt.textContent = opts.oomText || 'N/A';
           svg.appendChild(txt);
           return;
@@ -476,7 +477,7 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
         setTimeout(function(l){ l.style.transition = 'opacity .4s'; l.setAttribute('opacity', 1); }, 500, lbl);
 
         rect.addEventListener('mousemove', function(e){
-          showTip(e, '<span class="k">' + s0.label + '</span>&nbsp; <b>' + (opts.barFmt ? opts.barFmt(v) : v) + (opts.unit||'') + '</b>', host);
+          showTip(e, '<span class="k">' + s0.label + '</span>&nbsp; <b>' + (opts.barFmt ? opts.barFmt(v) : v) + '</b>', host);
         });
         rect.addEventListener('mouseleave', hideTip);
         rect.style.cursor = 'pointer';
@@ -550,7 +551,11 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
       var lastGood = validIdx[validIdx.length - 1];
       if (lastGood !== undefined && lastGood < s0.values.length - 1){
         var lp = xy(lastGood, s0.values[lastGood]);
-        var mark = el('text', { x: lp[0] + 8, y: lp[1] - 8, class: 'axis-label', fill: 'var(--bad)' });
+        var mx = lp[0] + 10, my = lp[1] - 4;
+        var mark = el('text', {
+          x: mx, y: my, class: 'oom-label', 'text-anchor': 'start',
+          transform: 'rotate(-90 ' + mx + ' ' + my + ')'
+        });
         mark.textContent = opts.oomText || 'OOM';
         svg.appendChild(mark);
       }

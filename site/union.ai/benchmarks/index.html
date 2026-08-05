@@ -218,10 +218,10 @@ hr.rule { border: none; height: 1px; background: var(--border-soft); margin: 0; 
 
 .chart-wrap { position: relative; margin-top: 14px; }
 .chart-wrap svg { width: 100%; height: auto; display: block; overflow: visible; }
-.axis-label { fill: var(--ink-faint); font-family: var(--font-mono); font-size: 10.5px; }
+.axis-label { fill: var(--ink-faint); font-family: var(--font-mono); font-size: 9px; }
 .grid-line { stroke: var(--border-soft); stroke-width: 1; }
-.bar-label { fill: var(--ink); font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-anchor: middle; }
-.oom-label { fill: var(--bad); font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-anchor: middle; }
+.bar-label { fill: var(--ink); font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; text-anchor: middle; }
+.oom-label { fill: var(--bad); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: .02em; }
 
 .tooltip {
   position: absolute; pointer-events: none; z-index: 10;
@@ -293,7 +293,7 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
 </head>
 <body>
 
-<div class="nav"><div class="wrap nav-row"><a class="nav-brand" href="https://claude.ai/code/artifact/8725c417-889b-4364-adb5-6c21a931f094"><svg class="nav-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--series-b)"/><path d="M2 17L12 22L22 17" stroke="var(--ink-dim)" stroke-width="1.6" fill="none"/><path d="M2 12L12 17L22 12" stroke="var(--series-b)" stroke-width="1.6" fill="none"/></svg>union.ai</a><div class="nav-links"><a href="https://www.union.ai">union.ai</a><a href="https://claude.ai/code/artifact/8725c417-889b-4364-adb5-6c21a931f094">Benchmarks</a><a href="https://flyte.org">flyte.org &#8599;</a><a class="btn btn-primary btn-sm nav-cta" href="https://www.union.ai/get-devbox">Try the Devbox</a></div></div></div>
+<div class="nav"><div class="wrap nav-row"><a class="nav-brand" href="/benchmarks"><svg class="nav-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--series-b)"/><path d="M2 17L12 22L22 17" stroke="var(--ink-dim)" stroke-width="1.6" fill="none"/><path d="M2 12L12 17L22 12" stroke="var(--series-b)" stroke-width="1.6" fill="none"/></svg>union.ai</a><div class="nav-links"><a href="https://www.union.ai">union.ai</a><a href="/benchmarks">Benchmarks</a><a href="https://flyte.org">flyte.org &#8599;</a><a class="btn btn-primary btn-sm nav-cta" href="https://www.union.ai/get-devbox">Try the Devbox</a></div></div></div>
 <main>
   <section class="hero bg-grid">
     <div class="wrap">
@@ -309,13 +309,13 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
         <div class="section-kicker">Studies</div>
         <h2>Pick a study</h2>
       </div>
-      <div class="bench-grid"><a class="bench-card reveal" href="https://claude.ai/code/artifact/f00d15b9-382c-4cce-921d-5de79d4d9071"><svg class="card-arrow" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="card-kicker">Multi-cluster scale-out study</div><h3>Orchestration Without Limits</h3><p>Union scales out to complete 200,000-action workflows where single-cluster OSS Flyte OOM-kills its executor.</p><div class="card-stat mono">200k actions, 0 failures</div></a><a class="bench-card reveal" href="https://claude.ai/code/artifact/d30102c4-c34d-41b4-85f3-ba3b0e5d0d30"><svg class="card-arrow" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="card-kicker">GPU-utilization study</div><h3>Reuse or Reload</h3><p>Container reuse keeps a 7B-model GPU at a sustained 100% utilization — 4.1× faster than spinning a fresh container per call.</p><div class="card-stat mono">4.1× faster</div></a><div class="bench-card soon reveal"><div class="card-kicker">Coming soon</div><h3>Have a workload you want benchmarked?</h3><p>This is an evolving series &mdash; new studies land here as they ship. <a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener" style="color:var(--series-b)">Propose one on GitHub &#8599;</a></p></div></div>
+      <div class="bench-grid"><a class="bench-card reveal" href="/benchmarks/flyte-vs-union"><svg class="card-arrow" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="card-kicker">Multi-cluster scale-out study</div><h3>Orchestration Without Limits</h3><p>Union scales out to complete 200,000-action workflows where single-cluster OSS Flyte OOM-kills its executor.</p><div class="card-stat mono">200k actions, 0 failures</div></a><a class="bench-card reveal" href="/benchmarks/union-reusable-containers"><svg class="card-arrow" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="card-kicker">GPU-utilization study</div><h3>Reuse or Reload</h3><p>Container reuse keeps a 7B-model GPU at a sustained 100% utilization — 4.1× faster than spinning a fresh container per call.</p><div class="card-stat mono">4.1× faster</div></a><div class="bench-card soon reveal"><div class="card-kicker">Coming soon</div><h3>Have a workload you want benchmarked?</h3><p>This is an evolving series &mdash; new studies land here as they ship. <a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener" style="color:var(--series-b)">Propose one on GitHub &#8599;</a></p></div></div>
     </div>
   </section>
 
   <div class="cta-band"><div class="wrap"><h2>Run these benchmarks yourself</h2><p>Spin up a real Flyte cluster in minutes and run the same workloads on your own hardware. No infra to provision, no YAML to write first.</p><a class="btn btn-primary" href="https://www.union.ai/get-devbox">Try the Devbox &rarr;</a></div></div>
 </main>
-<footer><div class="wrap footer-row"><div>Flyte Benchmarks &mdash; reproducible orchestration studies. <a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener">Source &amp; raw data on GitHub &#8599;</a></div><div class="footer-links"><a href="https://claude.ai/code/artifact/8725c417-889b-4364-adb5-6c21a931f094">All union.ai benchmarks</a><a href="https://flyte.org">flyte.org</a><a href="https://www.union.ai/get-devbox">Try the Devbox</a></div></div></footer>
+<footer><div class="wrap footer-row"><div>Flyte Benchmarks &mdash; reproducible orchestration studies. <a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener">Source &amp; raw data on GitHub &#8599;</a></div><div class="footer-links"><a href="/benchmarks">All union.ai benchmarks</a><a href="https://flyte.org">flyte.org</a><a href="https://www.union.ai/get-devbox">Try the Devbox</a></div></div></footer>
 
 <script>
 
@@ -429,15 +429,16 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
         var bx = gx - (s * barW) / 2 + si * barW + barW * 0.08;
         var bw = barW * 0.84;
         if (v === null || v === undefined){
-          var by = padT + innerH - 2;
-          // Give the label the full half-group it sits in (not just its own
-          // narrow bar-slot) so it clears a sibling bar in the same group --
-          // a bar-slot-centered label collides with a neighbor once there
-          // are 3+ categories and the group narrows.
-          var anchor = 'middle', lx = gx;
-          if (s > 1 && si === 0){ anchor = 'end'; lx = gx - 5; }
-          else if (s > 1 && si === s - 1){ anchor = 'start'; lx = gx + 5; }
-          var txt = el('text', { x: lx, y: by - 6, class: 'oom-label', 'text-anchor': anchor });
+          var by = padT + innerH - 4;
+          var lx = bx + bw/2;
+          // Vertical (reads bottom-to-top from the baseline) so the label's
+          // footprint is just its font size wide, not its text length --
+          // clears a sibling bar in the same group even on narrow, 3+
+          // category charts.
+          var txt = el('text', {
+            x: lx, y: by, class: 'oom-label', 'text-anchor': 'start',
+            transform: 'rotate(-90 ' + lx + ' ' + by + ')'
+          });
           txt.textContent = opts.oomText || 'N/A';
           svg.appendChild(txt);
           return;
@@ -459,7 +460,7 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
         setTimeout(function(l){ l.style.transition = 'opacity .4s'; l.setAttribute('opacity', 1); }, 500, lbl);
 
         rect.addEventListener('mousemove', function(e){
-          showTip(e, '<span class="k">' + s0.label + '</span>&nbsp; <b>' + (opts.barFmt ? opts.barFmt(v) : v) + (opts.unit||'') + '</b>', host);
+          showTip(e, '<span class="k">' + s0.label + '</span>&nbsp; <b>' + (opts.barFmt ? opts.barFmt(v) : v) + '</b>', host);
         });
         rect.addEventListener('mouseleave', hideTip);
         rect.style.cursor = 'pointer';
@@ -533,7 +534,11 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
       var lastGood = validIdx[validIdx.length - 1];
       if (lastGood !== undefined && lastGood < s0.values.length - 1){
         var lp = xy(lastGood, s0.values[lastGood]);
-        var mark = el('text', { x: lp[0] + 8, y: lp[1] - 8, class: 'axis-label', fill: 'var(--bad)' });
+        var mx = lp[0] + 10, my = lp[1] - 4;
+        var mark = el('text', {
+          x: mx, y: my, class: 'oom-label', 'text-anchor': 'start',
+          transform: 'rotate(-90 ' + mx + ' ' + my + ')'
+        });
         mark.textContent = opts.oomText || 'OOM';
         svg.appendChild(mark);
       }
