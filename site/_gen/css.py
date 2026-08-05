@@ -139,10 +139,10 @@ hr.rule { border: none; height: 1px; background: var(--border-soft); margin: 0; 
 
 .chart-wrap { position: relative; margin-top: 14px; }
 .chart-wrap svg { width: 100%; height: auto; display: block; overflow: visible; }
-.axis-label { fill: var(--ink-faint); font-family: var(--font-mono); font-size: 10.5px; }
+.axis-label { fill: var(--ink-faint); font-family: var(--font-mono); font-size: 9px; }
 .grid-line { stroke: var(--border-soft); stroke-width: 1; }
-.bar-label { fill: var(--ink); font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-anchor: middle; }
-.oom-label { fill: var(--bad); font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-anchor: middle; }
+.bar-label { fill: var(--ink); font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; text-anchor: middle; }
+.oom-label { fill: var(--bad); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: .02em; }
 
 .tooltip {
   position: absolute; pointer-events: none; z-index: 10;
