@@ -127,23 +127,6 @@ p { margin: 0; }
 }
 .bg-grid > .wrap { position: relative; z-index: 1; }
 
-/* ---------- nav ---------- */
-.nav {
-  position: sticky; top: 0; z-index: 40;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-soft);
-}
-.nav-row { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 24px; }
-.nav-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 800; font-size: 17px; text-decoration: none; color: var(--ink); white-space: nowrap; }
-.nav-mark { width: 22px; height: 22px; flex: none; }
-.nav-crumb { color: var(--ink-faint); font-weight: 600; }
-.nav-links { display: flex; align-items: center; gap: 28px; font-size: 14.5px; font-weight: 600; }
-.nav-links a { text-decoration: none; color: var(--ink-dim); transition: color .15s; }
-.nav-links a:hover { color: var(--ink); }
-.nav-links a.nav-cta { margin-left: 4px; color: var(--accent-ink); }
-.nav-links a.nav-cta:hover { color: var(--accent-ink); }
-
 /* ---------- buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
@@ -161,7 +144,6 @@ p { margin: 0; }
 .btn-primary:hover { box-shadow: 0 6px 24px -6px var(--accent); }
 .btn-ghost { background: transparent; border-color: var(--border); color: var(--ink); }
 .btn-ghost:hover { border-color: var(--accent); }
-.btn-sm { padding: 8px 16px; font-size: 13.5px; }
 .btn svg { width: 15px; height: 15px; }
 
 /* ---------- hero ---------- */
@@ -256,13 +238,6 @@ pre.code .s { color: var(--spark); }
 .cta-band p { color: var(--dark-band-ink-dim); margin: 14px auto 0; max-width: 52ch; font-size: 16.5px; }
 .cta-band .btn { margin-top: 26px; padding: 14px 28px; font-size: 16px; }
 
-/* ---------- footer ---------- */
-footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
-.footer-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; font-size: 13.5px; color: var(--ink-faint); }
-.footer-row a { color: var(--ink-dim); text-decoration: none; }
-.footer-row a:hover { color: var(--ink); }
-.footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
-
 /* ---------- landing grid ---------- */
 .bench-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
 .bench-card {
@@ -285,7 +260,6 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
 .reveal.in-view { opacity: 1; transform: none; }
 
 @media (max-width: 780px) {
-  .nav-links { display: none; }
   section { padding: 40px 0; }
 }
 
@@ -298,16 +272,7 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
     <div class="wrap">
       <h1>Flyte Benchmarks</h1>
       <p class="sub">Learn why Flyte 2 scales better, performs faster, and lets your Agents do more with less.</p>
-    </div>
-  </section>
-
-  <section>
-    <div class="wrap">
-      <div class="section-head">
-        <div class="section-kicker">Studies</div>
-        <h2>Pick a study</h2>
-      </div>
-      <div class="bench-grid"><a class="bench-card reveal" href="flyte1-vs-flyte2/index.html"><svg class="card-arrow" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="card-kicker">Scalability study</div><h3>Outscaling Flyte v1</h3><p>Flyte v2 runs common orchestration patterns 4.3–6.5× faster and removes v1's single-process OOM cliff entirely.</p><div class="card-stat mono">6.5× faster</div></a><a class="bench-card reveal" href="agents-write-flyte2-better/index.html"><svg class="card-arrow" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="card-kicker">Agent-authoring-cost study</div><h3>Agents Are More Token Efficient with Flyte v2</h3><p>A coding agent reaches a working pipeline in 1.78× fewer tokens on v2 — and solves patterns v1 can't express at all.</p><div class="card-stat mono">1.78× fewer tokens</div></a><div class="bench-card soon reveal"><div class="card-kicker">Coming soon</div><h3>Have a workload you want benchmarked?</h3><p>This is an evolving series &mdash; new studies land here as they ship. <a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener" style="color:var(--series-b)">Propose one on GitHub &#8599;</a></p></div></div>
+      <div class="bench-grid" style="margin-top:40px"><a class="bench-card reveal" href="flyte1-vs-flyte2/index.html"><svg class="card-arrow" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="card-kicker">Scalability study</div><h3>Outscaling Flyte v1</h3><p>Flyte v2 runs common orchestration patterns 4.3–6.5× faster and removes v1's single-process OOM cliff entirely.</p><div class="card-stat mono">6.5× faster</div></a><a class="bench-card reveal" href="agents-write-flyte2-better/index.html"><svg class="card-arrow" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="card-kicker">Agent-authoring-cost study</div><h3>Agents Are More Token Efficient with Flyte v2</h3><p>A coding agent reaches a working pipeline in 1.78× fewer tokens on v2 — and solves patterns v1 can't express at all.</p><div class="card-stat mono">1.78× fewer tokens</div></a><div class="bench-card soon reveal"><div class="card-kicker">Coming soon</div><h3>Have a workload you want benchmarked?</h3><p>This is an evolving series &mdash; new studies land here as they ship. <a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener" style="color:var(--series-b)">Propose one on GitHub &#8599;</a></p></div></div>
     </div>
   </section>
 
