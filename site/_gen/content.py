@@ -98,7 +98,7 @@ PAGES["agents-write-flyte2-better"] = dict(
     site="flyte",
     slug="agents-write-flyte2-better",
     eyebrow="Agent-authoring-cost study",
-    title="Agents Write Flyte v2 Better",
+    title="Agents Are More Token Efficient with Flyte v2",
     subtitle="A coding agent reaches a working pipeline in 1.8× fewer tokens on Flyte v2 — and solves patterns Flyte v1 cannot express at all.",
     meta=["48 real subagent trajectories", "claude-sonnet-5, fixed across both arms", "live oracle · real cluster · no simulation"],
     pdf_href="https://github.com/flyteorg/flyte-benchmarks/blob/main/pdfs/flyte_agent_benchmark_paper.pdf",
@@ -274,7 +274,6 @@ PAGES["union-reusable-containers"] = dict(
         dict(
             id="fig-wall", kind="bar", tag="Fig. 1 · wall-clock",
             title="500 GSM8K questions — total wall-clock",
-            legend=[("Union · reuse", "series_b"), ("Flyte · no-reuse", "series_a")],
             data=dict(
                 categories=["500 questions"],
                 series=[
@@ -282,6 +281,7 @@ PAGES["union-reusable-containers"] = dict(
                     dict(label="Flyte · no-reuse", color="series_a", values=[1665]),
                 ],
                 yMax=1850, yFmt="s0", barFmt="s0", unit=" s",
+                horizontal=True, height=180,
             ),
             note="Loading the model twice instead of ten times, and packing concurrent callers into 256-prompt batches rather than isolated 50-prompt calls, completes the identical job <b>4.1×</b> faster.",
         ),

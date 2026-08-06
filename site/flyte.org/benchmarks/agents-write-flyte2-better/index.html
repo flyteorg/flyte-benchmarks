@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agents Write Flyte v2 Better — flyte.org Benchmarks</title>
+<title>Agents Are More Token Efficient with Flyte v2 — flyte.org Benchmarks</title>
 <meta name="description" content="A coding agent reaches a working pipeline in 1.8× fewer tokens on Flyte v2 — and solves patterns Flyte v1 cannot express at all.">
 <style>
 
@@ -293,12 +293,12 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
 </head>
 <body>
 
-<div class="nav"><div class="wrap nav-row"><a class="nav-brand" href="../index.html"><svg class="nav-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--series-b)"/><path d="M2 17L12 22L22 17" stroke="var(--ink-dim)" stroke-width="1.6" fill="none"/><path d="M2 12L12 17L22 12" stroke="var(--series-b)" stroke-width="1.6" fill="none"/></svg>flyte.org <span class="nav-crumb">/ Agents Write Flyte v2 Better</span></a><div class="nav-links"><a href="https://flyte.org">flyte.org</a><a href="../index.html">Benchmarks</a><a href="https://www.union.ai">union.ai &#8599;</a><a class="btn btn-primary btn-sm nav-cta" href="https://flyte.org/devbox">Try the Devbox</a></div></div></div>
+<div class="nav"><div class="wrap nav-row"><a class="nav-brand" href="../index.html"><svg class="nav-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--series-b)"/><path d="M2 17L12 22L22 17" stroke="var(--ink-dim)" stroke-width="1.6" fill="none"/><path d="M2 12L12 17L22 12" stroke="var(--series-b)" stroke-width="1.6" fill="none"/></svg>flyte.org <span class="nav-crumb">/ Agents Are More Token Efficient with Flyte v2</span></a><div class="nav-links"><a href="https://flyte.org">flyte.org</a><a href="../index.html">Benchmarks</a><a href="https://www.union.ai">union.ai &#8599;</a><a class="btn btn-primary btn-sm nav-cta" href="https://flyte.org/devbox">Try the Devbox</a></div></div></div>
 <main>
   <section class="hero bg-grid">
     <div class="wrap">
       <span class="eyebrow"><span class="dot"></span>Agent-authoring-cost study</span>
-      <h1>Agents Write Flyte v2 Better</h1>
+      <h1>Agents Are More Token Efficient with Flyte v2</h1>
       <p class="sub">A coding agent reaches a working pipeline in 1.8× fewer tokens on Flyte v2 — and solves patterns Flyte v1 cannot express at all.</p>
       <div class="hero-meta"><span>48 real subagent trajectories</span><span>claude-sonnet-5, fixed across both arms</span><span>live oracle · real cluster · no simulation</span></div>
     </div>
@@ -344,10 +344,28 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
   // IntersectionObserver isn't available at all, reveal immediately rather
   // than leaving content permanently invisible -- but never on a timer,
   // which would fire the animation regardless of scroll position.
+  //
+  // Chart draw calls (BenchBar/BenchLine/etc, registered via registerChart)
+  // are deferred the same way: a chart's grow/draw animation must play once
+  // its figure is actually visible, not at page load while it's still
+  // sitting at opacity:0 -- otherwise the animation finishes long before
+  // anyone can see it and the figure just "pops in" fully drawn.
+  var chartReady = {};
+  window.registerChart = function(id, fn){
+    var target = document.getElementById(id);
+    if (target && target.classList.contains('in-view')){ fn(); return; }
+    chartReady[id] = fn;
+  };
   var revealEls = document.querySelectorAll('.reveal, .figure');
   if (window.IntersectionObserver){
     var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){ if (e.isIntersecting) e.target.classList.add('in-view'); });
+      entries.forEach(function(e){
+        if (e.isIntersecting){
+          e.target.classList.add('in-view');
+          var fn = chartReady[e.target.id];
+          if (fn){ fn(); delete chartReady[e.target.id]; }
+        }
+      });
     }, { threshold: 0.16 });
     revealEls.forEach(function(el){ io.observe(el); });
   } else {
@@ -408,11 +426,68 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
     return e;
   }
 
+  // ---------- horizontal bar chart (one row per series x category) ----------
+  // opts: { categories:[...], series:[{label,color,values:[num,...]}],
+  //         yMax, barFmt(v), height }
+  function benchBarHorizontal(host, opts){
+    var W = 640, H = opts.height || 320;
+    var padL = 108, padR = 16, padT = 10, padB = 30;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var n = opts.categories.length, s = opts.series.length;
+    var groupH = innerH / n;
+    var barH = Math.min(40, (groupH * 0.62) / s);
+    var yMax = opts.yMax;
+
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, preserveAspectRatio: 'xMidYMid meet' });
+    host.appendChild(svg);
+
+    var ticks = opts.yTicks || 4;
+    for (var i = 0; i <= ticks; i++){
+      var xv = yMax * i / ticks;
+      var x = padL + (xv / yMax) * innerW;
+      svg.appendChild(el('line', { x1: x, x2: x, y1: padT, y2: padT + innerH, class: 'grid-line' }));
+      var lab = el('text', { x: x, y: padT + innerH + 18, class: 'axis-label', 'text-anchor': 'middle' });
+      lab.textContent = opts.yFmt ? opts.yFmt(xv) : xv;
+      svg.appendChild(lab);
+    }
+
+    opts.categories.forEach(function(cat, ci){
+      var gy = padT + ci * groupH + groupH / 2;
+      opts.series.forEach(function(s0, si){
+        var v = s0.values[ci];
+        var by = gy - (s * barH) / 2 + si * barH + barH * 0.08;
+        var bh = barH * 0.84;
+        var rowLab = el('text', { x: padL - 10, y: by + bh/2 + 3.5, class: 'axis-label', 'text-anchor': 'end' });
+        rowLab.textContent = s0.label;
+        svg.appendChild(rowLab);
+        if (v === null || v === undefined) return;
+        var bw = (v / yMax) * innerW;
+        var rect = el('rect', { x: padL, y: by, width: 0, height: bh, fill: s0.color, rx: 3 });
+        svg.appendChild(rect);
+        requestAnimationFrame(function(){
+          rect.style.transition = 'width .8s cubic-bezier(.16,1,.3,1)';
+          rect.setAttribute('width', bw);
+        });
+        var lbl = el('text', { x: padL + bw + 8, y: by + bh/2 + 3.5, class: 'bar-label', 'text-anchor': 'start', opacity: 0 });
+        lbl.textContent = opts.barFmt ? opts.barFmt(v) : v;
+        svg.appendChild(lbl);
+        setTimeout(function(l){ l.style.transition = 'opacity .4s'; l.setAttribute('opacity', 1); }, 500, lbl);
+
+        rect.addEventListener('mousemove', function(e){
+          showTip(e, '<span class="k">' + s0.label + '</span>&nbsp; <b>' + (opts.barFmt ? opts.barFmt(v) : v) + '</b>', host);
+        });
+        rect.addEventListener('mouseleave', hideTip);
+        rect.style.cursor = 'pointer';
+      });
+    });
+  }
+
   // ---------- grouped / annotated bar chart ----------
   // opts: { categories:[...], series:[{label,color,values:[num|null,...]}],
-  //         yMax, yFmt(v), barFmt(v), unit, oomText, height }
+  //         yMax, yFmt(v), barFmt(v), unit, oomText, height, horizontal }
   window.BenchBar = function(containerId, opts){
     var host = document.getElementById(containerId);
+    if (opts.horizontal){ benchBarHorizontal(host, opts); return; }
     var W = 640, H = opts.height || 320;
     var padL = 46, padR = 12, padT = 18, padB = 34;
     var innerW = W - padL - padR, innerH = H - padT - padB;
@@ -623,11 +698,9 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
   document.head.appendChild(styleTag);
 })();
 
-document.addEventListener('DOMContentLoaded', function(){
-BenchBar("fig-tokens", {categories:["A \u2014 core mechanics", "B \u2014 v2-only capability", "C \u2014 applied ML"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[71414, null, 75661]},{label:"Flyte v2",color:"var(--series-b)",values:[40622, 52818, 41985]}], yMax:90000, yFmt:function(v){return (v/1000).toFixed(0)+'k';}, barFmt:function(v){return (v/1000).toFixed(0)+'k tok';}, unit:" tok", oomText:"INFEASIBLE"});
-BenchBar("fig-perspec", {categories:["etl", "fanout_map", "conditional", "dyn_fanout", "fit_eval", "etl_join", "train_clsf", "hpo", "batch_inf"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[67492, 63492, 73331, 71291, 81464, 76050, 83625, 72982, 69986]},{label:"Flyte v2",color:"var(--series-b)",values:[41320, 39474, 40262, 38221, 43831, 43548, 43840, 41162, 39390]}], yMax:95000, yFmt:function(v){return (v/1000).toFixed(0)+'k';}, barFmt:function(v){return (v/1000).toFixed(0)+'k tok';}, unit:" tok"});
-BenchBar("fig-errors", {categories:["Flyte v1", "Flyte v2"], series:[{label:"Framework-mechanics",color:"var(--series-a)",values:[52, 1]},{label:"Logic",color:"var(--bad)",values:[2, 0]}], yMax:60, yFmt:function(v){return Math.round(v);}, barFmt:function(v){return Math.round(v);}, unit:""});
-});
+registerChart("fig-tokens-card", function(){ BenchBar("fig-tokens", {categories:["A \u2014 core mechanics", "B \u2014 v2-only capability", "C \u2014 applied ML"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[71414, null, 75661]},{label:"Flyte v2",color:"var(--series-b)",values:[40622, 52818, 41985]}], yMax:90000, yFmt:function(v){return (v/1000).toFixed(0)+'k';}, barFmt:function(v){return (v/1000).toFixed(0)+'k tok';}, unit:" tok", oomText:"INFEASIBLE"}); });
+registerChart("fig-perspec-card", function(){ BenchBar("fig-perspec", {categories:["etl", "fanout_map", "conditional", "dyn_fanout", "fit_eval", "etl_join", "train_clsf", "hpo", "batch_inf"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[67492, 63492, 73331, 71291, 81464, 76050, 83625, 72982, 69986]},{label:"Flyte v2",color:"var(--series-b)",values:[41320, 39474, 40262, 38221, 43831, 43548, 43840, 41162, 39390]}], yMax:95000, yFmt:function(v){return (v/1000).toFixed(0)+'k';}, barFmt:function(v){return (v/1000).toFixed(0)+'k tok';}, unit:" tok"}); });
+registerChart("fig-errors-card", function(){ BenchBar("fig-errors", {categories:["Flyte v1", "Flyte v2"], series:[{label:"Framework-mechanics",color:"var(--series-a)",values:[52, 1]},{label:"Logic",color:"var(--bad)",values:[2, 0]}], yMax:60, yFmt:function(v){return Math.round(v);}, barFmt:function(v){return Math.round(v);}, unit:""}); });
 </script>
 </body>
 </html>

@@ -72,7 +72,7 @@ def render_figure_script(theme, fig):
         )
         return (
             "BenchBar({cid}, {{categories:{cats}, series:[{series}], yMax:{ymax}, "
-            "yFmt:{yfmt}, barFmt:{barfmt}, unit:{unit}{oom}}});"
+            "yFmt:{yfmt}, barFmt:{barfmt}, unit:{unit}{oom}{height}{horizontal}}});"
         ).format(
             cid=json.dumps(fig["id"]),
             cats=json.dumps(d["categories"]),
@@ -82,6 +82,8 @@ def render_figure_script(theme, fig):
             barfmt=FMT_JS[d["barFmt"]],
             unit=json.dumps(d.get("unit", "")),
             oom=(", oomText:" + json.dumps(d["oomText"])) if d.get("oomText") else "",
+            height=(", height:" + str(d["height"])) if d.get("height") else "",
+            horizontal=(", horizontal:true" if d.get("horizontal") else ""),
         )
     if fig["kind"] == "line":
         series_js = ",".join(
@@ -258,7 +260,12 @@ def page_shell(theme, title, description, body_html, canonical_path, extra_scrip
 def render_detail_page(page):
     theme = SITES[page["site"]]
     figures_html = "\n".join(render_figure(theme, f) for f in page["figures"])
-    figures_script = "\n".join(render_figure_script(theme, f) for f in page["figures"])
+    figures_script = "\n".join(
+        "registerChart({card_id}, function(){{ {stmt} }});".format(
+            card_id=json.dumps(f["id"] + "-card"), stmt=render_figure_script(theme, f)
+        )
+        for f in page["figures"]
+    )
     stats_html = "".join(
         '<div class="stat"><span class="num{cls}" data-countup data-to="{to}" data-decimals="{dec}"'
         ' data-prefix="{pre}" data-suffix="{suf}" data-from="0">0</span>'
@@ -331,7 +338,12 @@ def render_detail_page(page):
         footer=footer_html(theme, bench_href="../index.html"),
     )
 
-    extra = "document.addEventListener('DOMContentLoaded', function(){{\n{}\n}});".format(figures_script)
+    # Runs synchronously, in the same script block as the reveal engine
+    # (not deferred to DOMContentLoaded) so every chart is registered before
+    # the reveal IntersectionObserver's first (always-async) callback can
+    # fire -- otherwise an above-the-fold figure could intersect before its
+    # chart is registered and never get drawn at all.
+    extra = figures_script
     return page_shell(
         theme,
         title="{} — {} Benchmarks".format(page["title"], theme["site_name"]),
@@ -356,7 +368,7 @@ LANDING_CARDS = {
         dict(
             href="agents-write-flyte2-better/index.html",
             kicker="Agent-authoring-cost study",
-            title="Agents Write Flyte v2 Better",
+            title="Agents Are More Token Efficient with Flyte v2",
             desc="A coding agent reaches a working pipeline in 1.78× fewer tokens on v2 — and solves patterns v1 can't express at all.",
             stat="1.78× fewer tokens",
         ),

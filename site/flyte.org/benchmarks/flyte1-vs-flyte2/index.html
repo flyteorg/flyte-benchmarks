@@ -345,10 +345,28 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
   // IntersectionObserver isn't available at all, reveal immediately rather
   // than leaving content permanently invisible -- but never on a timer,
   // which would fire the animation regardless of scroll position.
+  //
+  // Chart draw calls (BenchBar/BenchLine/etc, registered via registerChart)
+  // are deferred the same way: a chart's grow/draw animation must play once
+  // its figure is actually visible, not at page load while it's still
+  // sitting at opacity:0 -- otherwise the animation finishes long before
+  // anyone can see it and the figure just "pops in" fully drawn.
+  var chartReady = {};
+  window.registerChart = function(id, fn){
+    var target = document.getElementById(id);
+    if (target && target.classList.contains('in-view')){ fn(); return; }
+    chartReady[id] = fn;
+  };
   var revealEls = document.querySelectorAll('.reveal, .figure');
   if (window.IntersectionObserver){
     var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){ if (e.isIntersecting) e.target.classList.add('in-view'); });
+      entries.forEach(function(e){
+        if (e.isIntersecting){
+          e.target.classList.add('in-view');
+          var fn = chartReady[e.target.id];
+          if (fn){ fn(); delete chartReady[e.target.id]; }
+        }
+      });
     }, { threshold: 0.16 });
     revealEls.forEach(function(el){ io.observe(el); });
   } else {
@@ -409,11 +427,68 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
     return e;
   }
 
+  // ---------- horizontal bar chart (one row per series x category) ----------
+  // opts: { categories:[...], series:[{label,color,values:[num,...]}],
+  //         yMax, barFmt(v), height }
+  function benchBarHorizontal(host, opts){
+    var W = 640, H = opts.height || 320;
+    var padL = 108, padR = 16, padT = 10, padB = 30;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var n = opts.categories.length, s = opts.series.length;
+    var groupH = innerH / n;
+    var barH = Math.min(40, (groupH * 0.62) / s);
+    var yMax = opts.yMax;
+
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, preserveAspectRatio: 'xMidYMid meet' });
+    host.appendChild(svg);
+
+    var ticks = opts.yTicks || 4;
+    for (var i = 0; i <= ticks; i++){
+      var xv = yMax * i / ticks;
+      var x = padL + (xv / yMax) * innerW;
+      svg.appendChild(el('line', { x1: x, x2: x, y1: padT, y2: padT + innerH, class: 'grid-line' }));
+      var lab = el('text', { x: x, y: padT + innerH + 18, class: 'axis-label', 'text-anchor': 'middle' });
+      lab.textContent = opts.yFmt ? opts.yFmt(xv) : xv;
+      svg.appendChild(lab);
+    }
+
+    opts.categories.forEach(function(cat, ci){
+      var gy = padT + ci * groupH + groupH / 2;
+      opts.series.forEach(function(s0, si){
+        var v = s0.values[ci];
+        var by = gy - (s * barH) / 2 + si * barH + barH * 0.08;
+        var bh = barH * 0.84;
+        var rowLab = el('text', { x: padL - 10, y: by + bh/2 + 3.5, class: 'axis-label', 'text-anchor': 'end' });
+        rowLab.textContent = s0.label;
+        svg.appendChild(rowLab);
+        if (v === null || v === undefined) return;
+        var bw = (v / yMax) * innerW;
+        var rect = el('rect', { x: padL, y: by, width: 0, height: bh, fill: s0.color, rx: 3 });
+        svg.appendChild(rect);
+        requestAnimationFrame(function(){
+          rect.style.transition = 'width .8s cubic-bezier(.16,1,.3,1)';
+          rect.setAttribute('width', bw);
+        });
+        var lbl = el('text', { x: padL + bw + 8, y: by + bh/2 + 3.5, class: 'bar-label', 'text-anchor': 'start', opacity: 0 });
+        lbl.textContent = opts.barFmt ? opts.barFmt(v) : v;
+        svg.appendChild(lbl);
+        setTimeout(function(l){ l.style.transition = 'opacity .4s'; l.setAttribute('opacity', 1); }, 500, lbl);
+
+        rect.addEventListener('mousemove', function(e){
+          showTip(e, '<span class="k">' + s0.label + '</span>&nbsp; <b>' + (opts.barFmt ? opts.barFmt(v) : v) + '</b>', host);
+        });
+        rect.addEventListener('mouseleave', hideTip);
+        rect.style.cursor = 'pointer';
+      });
+    });
+  }
+
   // ---------- grouped / annotated bar chart ----------
   // opts: { categories:[...], series:[{label,color,values:[num|null,...]}],
-  //         yMax, yFmt(v), barFmt(v), unit, oomText, height }
+  //         yMax, yFmt(v), barFmt(v), unit, oomText, height, horizontal }
   window.BenchBar = function(containerId, opts){
     var host = document.getElementById(containerId);
+    if (opts.horizontal){ benchBarHorizontal(host, opts); return; }
     var W = 640, H = opts.height || 320;
     var padL = 46, padR = 12, padT = 18, padB = 34;
     var innerW = W - padL - padR, innerH = H - padT - padB;
@@ -624,12 +699,10 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
   document.head.appendChild(styleTag);
 })();
 
-document.addEventListener('DOMContentLoaded', function(){
-BenchBar("fig-fanout", {categories:["1,000", "3,000", "6,000"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[126.3, 371.8, 699.1]},{label:"Flyte v2",color:"var(--series-b)",values:[68.4, 144.2, 355.6]}], yMax:800, yFmt:function(v){return Math.round(v).toLocaleString()+' s';}, barFmt:function(v){return Math.round(v).toLocaleString()+' s';}, unit:" s"});
-BenchBar("fig-memory", {categories:["1,000 held", "6,000 held"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[7.9, null]},{label:"Flyte v2",color:"var(--series-b)",values:[0.3, 0.3]}], yMax:9, yFmt:function(v){return v.toFixed(1)+' GiB';}, barFmt:function(v){return v.toFixed(1)+' GiB';}, unit:"", oomText:"OOM-KILLED"});
-BenchLine("fig-chain", {xLabels:["100", "300", "500"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[65.7, 202.8, 366.1]},{label:"Flyte v2",color:"var(--series-b)",values:[18.9, 53.4, 83.5]}], yMax:400, yMin:0, yFmt:function(v){return Math.round(v).toLocaleString()+' s';}, ptFmt:function(v){return v.toFixed(1)+' s';}});
-BenchLine("fig-conc", {xLabels:["1k", "5k", "10k", "20k", "40k"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[242, 288, 322, 504, 1016]},{label:"Flyte v2",color:"var(--series-b)",values:[146, 181, 266, 420, 756]}], yMax:1100, yMin:0, yFmt:function(v){return Math.round(v).toLocaleString()+' s';}, ptFmt:function(v){return Math.round(v).toLocaleString()+' s';}});
-});
+registerChart("fig-fanout-card", function(){ BenchBar("fig-fanout", {categories:["1,000", "3,000", "6,000"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[126.3, 371.8, 699.1]},{label:"Flyte v2",color:"var(--series-b)",values:[68.4, 144.2, 355.6]}], yMax:800, yFmt:function(v){return Math.round(v).toLocaleString()+' s';}, barFmt:function(v){return Math.round(v).toLocaleString()+' s';}, unit:" s"}); });
+registerChart("fig-memory-card", function(){ BenchBar("fig-memory", {categories:["1,000 held", "6,000 held"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[7.9, null]},{label:"Flyte v2",color:"var(--series-b)",values:[0.3, 0.3]}], yMax:9, yFmt:function(v){return v.toFixed(1)+' GiB';}, barFmt:function(v){return v.toFixed(1)+' GiB';}, unit:"", oomText:"OOM-KILLED"}); });
+registerChart("fig-chain-card", function(){ BenchLine("fig-chain", {xLabels:["100", "300", "500"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[65.7, 202.8, 366.1]},{label:"Flyte v2",color:"var(--series-b)",values:[18.9, 53.4, 83.5]}], yMax:400, yMin:0, yFmt:function(v){return Math.round(v).toLocaleString()+' s';}, ptFmt:function(v){return v.toFixed(1)+' s';}}); });
+registerChart("fig-conc-card", function(){ BenchLine("fig-conc", {xLabels:["1k", "5k", "10k", "20k", "40k"], series:[{label:"Flyte v1",color:"var(--series-a)",values:[242, 288, 322, 504, 1016]},{label:"Flyte v2",color:"var(--series-b)",values:[146, 181, 266, 420, 756]}], yMax:1100, yMin:0, yFmt:function(v){return Math.round(v).toLocaleString()+' s';}, ptFmt:function(v){return Math.round(v).toLocaleString()+' s';}}); });
 </script>
 </body>
 </html>

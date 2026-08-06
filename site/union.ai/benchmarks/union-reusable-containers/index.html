@@ -322,7 +322,7 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
         <h2>What the numbers show</h2>
         <p>Every chart below is drawn straight from the measured data in the paper &mdash; hover any bar or point for the exact value.</p>
       </div>
-      <div class="figure" id="fig-wall-card"><div class="figure-head"><span class="figure-title">500 GSM8K questions — total wall-clock</span><span class="figure-tag">Fig. 1 · wall-clock</span></div><div class="legend"><span class="sw"><i style="background:var(--series-b)"></i>Union · reuse</span><span class="sw"><i style="background:var(--series-a)"></i>Flyte · no-reuse</span></div><div class="chart-wrap" id="fig-wall"></div><p class="figure-note">Loading the model twice instead of ten times, and packing concurrent callers into 256-prompt batches rather than isolated 50-prompt calls, completes the identical job <b>4.1×</b> faster.</p></div>
+      <div class="figure" id="fig-wall-card"><div class="figure-head"><span class="figure-title">500 GSM8K questions — total wall-clock</span><span class="figure-tag">Fig. 1 · wall-clock</span></div><div class="chart-wrap" id="fig-wall"></div><p class="figure-note">Loading the model twice instead of ten times, and packing concurrent callers into 256-prompt batches rather than isolated 50-prompt calls, completes the identical job <b>4.1×</b> faster.</p></div>
 <div class="figure" id="fig-trace-union-card"><div class="figure-head"><span class="figure-title">Compute utilization + GPU memory over the run</span><span class="figure-tag">Fig. 2a · Union · reuse</span></div><div class="chart-wrap" id="fig-trace-union"></div><p class="figure-note">One model load, then a steady <b>100%</b> through batched inference — mean utilization over the whole run is 35%, rising toward 100% as more work amortizes that single load.</p></div>
 <div class="figure" id="fig-trace-flyte-card"><div class="figure-head"><span class="figure-title">Compute utilization + GPU memory over the run</span><span class="figure-tag">Fig. 2b · Flyte · no-reuse</span></div><div class="chart-wrap" id="fig-trace-flyte"></div><p class="figure-note">Each chunk loads its own copy of the weights, fires one ~33-second 100% burst, then releases the GPU — <b>ten loads for ten chunks</b>. Integrated, Flyte computes for only 16% of the run while holding a model resident 86% of it: almost always occupied, almost never working.</p></div>
       <div class="figure"><div class="figure-head"><span class="figure-title">Same workload, two execution models</span><span class="figure-tag">Table 1</span></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--ink-faint);font-weight:600">Metric</th><th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--ink-faint);font-weight:600">Union · reuse</th><th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--ink-faint);font-weight:600">Flyte · no-reuse</th></tr></thead><tbody><tr><td style="padding:9px 8px;border-bottom:1px solid var(--border-soft);font-size:14px;color:var(--ink-dim)">Wall-clock, 500 questions</td><td class="mono" style="color:var(--series-b);font-weight:600">404 s</td><td class="mono" style="color:var(--series-a);font-weight:600">1,665 s (4.1×)</td></tr><tr><td style="padding:9px 8px;border-bottom:1px solid var(--border-soft);font-size:14px;color:var(--ink-dim)">Model loads for the job</td><td class="mono" style="color:var(--series-b);font-weight:600">2</td><td class="mono" style="color:var(--series-a);font-weight:600">10</td></tr><tr><td style="padding:9px 8px;border-bottom:1px solid var(--border-soft);font-size:14px;color:var(--ink-dim)">Cold start, amortized / question</td><td class="mono" style="color:var(--series-b);font-weight:600">~0.5 s</td><td class="mono" style="color:var(--series-a);font-weight:600">~3.7 s</td></tr><tr><td style="padding:9px 8px;border-bottom:1px solid var(--border-soft);font-size:14px;color:var(--ink-dim)">Effective batch size</td><td class="mono" style="color:var(--series-b);font-weight:600">up to 256</td><td class="mono" style="color:var(--series-a);font-weight:600">50</td></tr><tr><td style="padding:9px 8px;border-bottom:1px solid var(--border-soft);font-size:14px;color:var(--ink-dim)">Peak decode throughput</td><td class="mono" style="color:var(--series-b);font-weight:600">1,424 tok/s</td><td class="mono" style="color:var(--series-a);font-weight:600">433 tok/s</td></tr><tr><td style="padding:9px 8px;border-bottom:1px solid var(--border-soft);font-size:14px;color:var(--ink-dim)">Time computing (util &gt; 50%)</td><td class="mono" style="color:var(--series-b);font-weight:600">35%</td><td class="mono" style="color:var(--series-a);font-weight:600">16.1%</td></tr><tr><td style="padding:9px 8px;border-bottom:1px solid var(--border-soft);font-size:14px;color:var(--ink-dim)">Time holding a model, idle</td><td class="mono" style="color:var(--series-b);font-weight:600">61%</td><td class="mono" style="color:var(--series-a);font-weight:600">86.5%</td></tr></tbody></table></div></div>
@@ -344,10 +344,28 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
   // IntersectionObserver isn't available at all, reveal immediately rather
   // than leaving content permanently invisible -- but never on a timer,
   // which would fire the animation regardless of scroll position.
+  //
+  // Chart draw calls (BenchBar/BenchLine/etc, registered via registerChart)
+  // are deferred the same way: a chart's grow/draw animation must play once
+  // its figure is actually visible, not at page load while it's still
+  // sitting at opacity:0 -- otherwise the animation finishes long before
+  // anyone can see it and the figure just "pops in" fully drawn.
+  var chartReady = {};
+  window.registerChart = function(id, fn){
+    var target = document.getElementById(id);
+    if (target && target.classList.contains('in-view')){ fn(); return; }
+    chartReady[id] = fn;
+  };
   var revealEls = document.querySelectorAll('.reveal, .figure');
   if (window.IntersectionObserver){
     var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){ if (e.isIntersecting) e.target.classList.add('in-view'); });
+      entries.forEach(function(e){
+        if (e.isIntersecting){
+          e.target.classList.add('in-view');
+          var fn = chartReady[e.target.id];
+          if (fn){ fn(); delete chartReady[e.target.id]; }
+        }
+      });
     }, { threshold: 0.16 });
     revealEls.forEach(function(el){ io.observe(el); });
   } else {
@@ -408,11 +426,68 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
     return e;
   }
 
+  // ---------- horizontal bar chart (one row per series x category) ----------
+  // opts: { categories:[...], series:[{label,color,values:[num,...]}],
+  //         yMax, barFmt(v), height }
+  function benchBarHorizontal(host, opts){
+    var W = 640, H = opts.height || 320;
+    var padL = 108, padR = 16, padT = 10, padB = 30;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var n = opts.categories.length, s = opts.series.length;
+    var groupH = innerH / n;
+    var barH = Math.min(40, (groupH * 0.62) / s);
+    var yMax = opts.yMax;
+
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, preserveAspectRatio: 'xMidYMid meet' });
+    host.appendChild(svg);
+
+    var ticks = opts.yTicks || 4;
+    for (var i = 0; i <= ticks; i++){
+      var xv = yMax * i / ticks;
+      var x = padL + (xv / yMax) * innerW;
+      svg.appendChild(el('line', { x1: x, x2: x, y1: padT, y2: padT + innerH, class: 'grid-line' }));
+      var lab = el('text', { x: x, y: padT + innerH + 18, class: 'axis-label', 'text-anchor': 'middle' });
+      lab.textContent = opts.yFmt ? opts.yFmt(xv) : xv;
+      svg.appendChild(lab);
+    }
+
+    opts.categories.forEach(function(cat, ci){
+      var gy = padT + ci * groupH + groupH / 2;
+      opts.series.forEach(function(s0, si){
+        var v = s0.values[ci];
+        var by = gy - (s * barH) / 2 + si * barH + barH * 0.08;
+        var bh = barH * 0.84;
+        var rowLab = el('text', { x: padL - 10, y: by + bh/2 + 3.5, class: 'axis-label', 'text-anchor': 'end' });
+        rowLab.textContent = s0.label;
+        svg.appendChild(rowLab);
+        if (v === null || v === undefined) return;
+        var bw = (v / yMax) * innerW;
+        var rect = el('rect', { x: padL, y: by, width: 0, height: bh, fill: s0.color, rx: 3 });
+        svg.appendChild(rect);
+        requestAnimationFrame(function(){
+          rect.style.transition = 'width .8s cubic-bezier(.16,1,.3,1)';
+          rect.setAttribute('width', bw);
+        });
+        var lbl = el('text', { x: padL + bw + 8, y: by + bh/2 + 3.5, class: 'bar-label', 'text-anchor': 'start', opacity: 0 });
+        lbl.textContent = opts.barFmt ? opts.barFmt(v) : v;
+        svg.appendChild(lbl);
+        setTimeout(function(l){ l.style.transition = 'opacity .4s'; l.setAttribute('opacity', 1); }, 500, lbl);
+
+        rect.addEventListener('mousemove', function(e){
+          showTip(e, '<span class="k">' + s0.label + '</span>&nbsp; <b>' + (opts.barFmt ? opts.barFmt(v) : v) + '</b>', host);
+        });
+        rect.addEventListener('mouseleave', hideTip);
+        rect.style.cursor = 'pointer';
+      });
+    });
+  }
+
   // ---------- grouped / annotated bar chart ----------
   // opts: { categories:[...], series:[{label,color,values:[num|null,...]}],
-  //         yMax, yFmt(v), barFmt(v), unit, oomText, height }
+  //         yMax, yFmt(v), barFmt(v), unit, oomText, height, horizontal }
   window.BenchBar = function(containerId, opts){
     var host = document.getElementById(containerId);
+    if (opts.horizontal){ benchBarHorizontal(host, opts); return; }
     var W = 640, H = opts.height || 320;
     var padL = 46, padR = 12, padT = 18, padB = 34;
     var innerW = W - padL - padR, innerH = H - padT - padB;
@@ -623,11 +698,9 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
   document.head.appendChild(styleTag);
 })();
 
-document.addEventListener('DOMContentLoaded', function(){
-BenchBar("fig-wall", {categories:["500 questions"], series:[{label:"Union \u00b7 reuse",color:"var(--series-b)",values:[404]},{label:"Flyte \u00b7 no-reuse",color:"var(--series-a)",values:[1665]}], yMax:1850, yFmt:function(v){return Math.round(v).toLocaleString()+' s';}, barFmt:function(v){return Math.round(v).toLocaleString()+' s';}, unit:" s"});
-BenchTrace("fig-trace-union", {util:[0, 0.05, 0.9, 1, 0.55, 0.15, 0.95, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], mem:[0, 4, 13, 13, 13, 13, 13, 13, 13, 14, 14, 15, 15, 16, 17, 18, 19, 20, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22], color:"var(--series-b)", memMax:24});
-BenchTrace("fig-trace-flyte", {util:[0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0], mem:[0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0], color:"var(--series-a)", memMax:24});
-});
+registerChart("fig-wall-card", function(){ BenchBar("fig-wall", {categories:["500 questions"], series:[{label:"Union \u00b7 reuse",color:"var(--series-b)",values:[404]},{label:"Flyte \u00b7 no-reuse",color:"var(--series-a)",values:[1665]}], yMax:1850, yFmt:function(v){return Math.round(v).toLocaleString()+' s';}, barFmt:function(v){return Math.round(v).toLocaleString()+' s';}, unit:" s", height:180, horizontal:true}); });
+registerChart("fig-trace-union-card", function(){ BenchTrace("fig-trace-union", {util:[0, 0.05, 0.9, 1, 0.55, 0.15, 0.95, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], mem:[0, 4, 13, 13, 13, 13, 13, 13, 13, 14, 14, 15, 15, 16, 17, 18, 19, 20, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22], color:"var(--series-b)", memMax:24}); });
+registerChart("fig-trace-flyte-card", function(){ BenchTrace("fig-trace-flyte", {util:[0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0], mem:[0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0, 14, 0, 0, 0, 0], color:"var(--series-a)", memMax:24}); });
 </script>
 </body>
 </html>
