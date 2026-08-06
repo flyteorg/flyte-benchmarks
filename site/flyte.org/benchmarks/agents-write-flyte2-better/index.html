@@ -293,7 +293,7 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
 </head>
 <body>
 
-<div class="nav"><div class="wrap nav-row"><a class="nav-brand" href="/benchmarks"><svg class="nav-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--series-b)"/><path d="M2 17L12 22L22 17" stroke="var(--ink-dim)" stroke-width="1.6" fill="none"/><path d="M2 12L12 17L22 12" stroke="var(--series-b)" stroke-width="1.6" fill="none"/></svg>flyte.org <span class="nav-crumb">/ Agents Write Flyte v2 Better</span></a><div class="nav-links"><a href="https://flyte.org">flyte.org</a><a href="/benchmarks">Benchmarks</a><a href="https://www.union.ai">union.ai &#8599;</a><a class="btn btn-primary btn-sm nav-cta" href="https://flyte.org/devbox">Try the Devbox</a></div></div></div>
+<div class="nav"><div class="wrap nav-row"><a class="nav-brand" href="../index.html"><svg class="nav-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--series-b)"/><path d="M2 17L12 22L22 17" stroke="var(--ink-dim)" stroke-width="1.6" fill="none"/><path d="M2 12L12 17L22 12" stroke="var(--series-b)" stroke-width="1.6" fill="none"/></svg>flyte.org <span class="nav-crumb">/ Agents Write Flyte v2 Better</span></a><div class="nav-links"><a href="https://flyte.org">flyte.org</a><a href="../index.html">Benchmarks</a><a href="https://www.union.ai">union.ai &#8599;</a><a class="btn btn-primary btn-sm nav-cta" href="https://flyte.org/devbox">Try the Devbox</a></div></div></div>
 <main>
   <section class="hero bg-grid">
     <div class="wrap">
@@ -331,7 +331,7 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
 
   <div class="cta-band"><div class="wrap"><h2>See it for yourself</h2><p>Spin up a real Flyte cluster in minutes and run the same workloads on your own hardware. No infra to provision, no YAML to write first.</p><a class="btn btn-primary" href="https://flyte.org/devbox">Try the Devbox &rarr;</a></div></div>
 </main>
-<footer><div class="wrap footer-row"><div>Flyte Benchmarks &mdash; reproducible orchestration studies. <a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener">Source &amp; raw data on GitHub &#8599;</a></div><div class="footer-links"><a href="/benchmarks">All flyte.org benchmarks</a><a href="https://www.union.ai">union.ai</a><a href="https://flyte.org/devbox">Try the Devbox</a></div></div></footer>
+<footer><div class="wrap footer-row"><div>Flyte Benchmarks &mdash; reproducible orchestration studies. <a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener">Source &amp; raw data on GitHub &#8599;</a></div><div class="footer-links"><a href="../index.html">All flyte.org benchmarks</a><a href="https://www.union.ai">union.ai</a><a href="https://flyte.org/devbox">Try the Devbox</a></div></div></footer>
 
 <script>
 
@@ -340,17 +340,19 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
   function tok(name){ return css.getPropertyValue(name).trim(); }
 
   // ---------- scroll reveal ----------
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){ if (e.isIntersecting) e.target.classList.add('in-view'); });
-  }, { threshold: 0.16 });
+  // Fades in only as each figure/section actually scrolls into view. Where
+  // IntersectionObserver isn't available at all, reveal immediately rather
+  // than leaving content permanently invisible -- but never on a timer,
+  // which would fire the animation regardless of scroll position.
   var revealEls = document.querySelectorAll('.reveal, .figure');
-  revealEls.forEach(function(el){ io.observe(el); });
-  // safety net: guarantee visibility even if the observer never fires
-  // (unusual viewport/zoom, slow callback, extensions) rather than leaving
-  // content permanently opacity:0.
-  setTimeout(function(){
+  if (window.IntersectionObserver){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if (e.isIntersecting) e.target.classList.add('in-view'); });
+    }, { threshold: 0.16 });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
     revealEls.forEach(function(el){ el.classList.add('in-view'); });
-  }, 1200);
+  }
 
   // ---------- count-up ----------
   function easeOutExpo(t){ return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
@@ -372,20 +374,18 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
     requestAnimationFrame(step);
   }
   var countupEls = document.querySelectorAll('[data-countup]');
-  var cio = new IntersectionObserver(function(entries, obs){
-    entries.forEach(function(e){
-      if (e.isIntersecting && !e.target.dataset.counted){
-        e.target.dataset.counted = '1'; countUp(e.target); obs.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.6 });
-  countupEls.forEach(function(el){ cio.observe(el); });
-  // safety net: same rationale as the reveal observer above.
-  setTimeout(function(){
-    countupEls.forEach(function(el){
-      if (!el.dataset.counted){ el.dataset.counted = '1'; countUp(el); }
-    });
-  }, 1200);
+  if (window.IntersectionObserver){
+    var cio = new IntersectionObserver(function(entries, obs){
+      entries.forEach(function(e){
+        if (e.isIntersecting && !e.target.dataset.counted){
+          e.target.dataset.counted = '1'; countUp(e.target); obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.6 });
+    countupEls.forEach(function(el){ cio.observe(el); });
+  } else {
+    countupEls.forEach(function(el){ countUp(el); });
+  }
 
   // ---------- shared tooltip ----------
   var tip = document.createElement('div');
