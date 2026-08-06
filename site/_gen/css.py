@@ -48,23 +48,6 @@ p { margin: 0; }
 }
 .bg-grid > .wrap { position: relative; z-index: 1; }
 
-/* ---------- nav ---------- */
-.nav {
-  position: sticky; top: 0; z-index: 40;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-soft);
-}
-.nav-row { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 24px; }
-.nav-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 800; font-size: 17px; text-decoration: none; color: var(--ink); white-space: nowrap; }
-.nav-mark { width: 22px; height: 22px; flex: none; }
-.nav-crumb { color: var(--ink-faint); font-weight: 600; }
-.nav-links { display: flex; align-items: center; gap: 28px; font-size: 14.5px; font-weight: 600; }
-.nav-links a { text-decoration: none; color: var(--ink-dim); transition: color .15s; }
-.nav-links a:hover { color: var(--ink); }
-.nav-links a.nav-cta { margin-left: 4px; color: var(--accent-ink); }
-.nav-links a.nav-cta:hover { color: var(--accent-ink); }
-
 /* ---------- buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
@@ -82,7 +65,6 @@ p { margin: 0; }
 .btn-primary:hover { box-shadow: 0 6px 24px -6px var(--accent); }
 .btn-ghost { background: transparent; border-color: var(--border); color: var(--ink); }
 .btn-ghost:hover { border-color: var(--accent); }
-.btn-sm { padding: 8px 16px; font-size: 13.5px; }
 .btn svg { width: 15px; height: 15px; }
 
 /* ---------- hero ---------- */
@@ -177,13 +159,6 @@ pre.code .s { color: var(--spark); }
 .cta-band p { color: var(--dark-band-ink-dim); margin: 14px auto 0; max-width: 52ch; font-size: 16.5px; }
 .cta-band .btn { margin-top: 26px; padding: 14px 28px; font-size: 16px; }
 
-/* ---------- footer ---------- */
-footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
-.footer-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; font-size: 13.5px; color: var(--ink-faint); }
-.footer-row a { color: var(--ink-dim); text-decoration: none; }
-.footer-row a:hover { color: var(--ink); }
-.footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
-
 /* ---------- landing grid ---------- */
 .bench-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
 .bench-card {
@@ -206,7 +181,6 @@ footer { border-top: 1px solid var(--border-soft); padding: 40px 0 48px; }
 .reveal.in-view { opacity: 1; transform: none; }
 
 @media (max-width: 780px) {
-  .nav-links { display: none; }
   section { padding: 40px 0; }
 }
 """

@@ -154,60 +154,6 @@ def root_vars(theme):
     return "\n  ".join(lines)
 
 
-def nav_html(theme, bench_href, crumb=None):
-    other = UNION if theme is FLYTE else FLYTE
-    links = (
-        '<a href="{home}">{name}</a>'
-        '<a href="{bench}">Benchmarks</a>'
-        '<a href="{other_home}">{other_name} &#8599;</a>'
-    ).format(
-        home=theme["home_url"], name=theme["site_name"],
-        bench=bench_href,
-        other_home=other["home_url"], other_name=other["site_name"],
-    )
-    crumb_html = ""
-    if crumb:
-        crumb_html = ' <span class="nav-crumb">/ {}</span>'.format(htmlmod.escape(crumb))
-    return (
-        '<div class="nav"><div class="wrap nav-row">'
-        '<a class="nav-brand" href="{bench}">{mark}{name}{crumb}</a>'
-        '<div class="nav-links">{links}'
-        '<a class="btn btn-primary btn-sm nav-cta" href="{devbox}">Try the Devbox</a>'
-        "</div></div></div>"
-    ).format(
-        bench=bench_href, name=theme["site_name"], crumb=crumb_html,
-        links=links, devbox=theme["devbox_url"],
-        mark=NAV_MARK,
-    )
-
-
-NAV_MARK = (
-    '<svg class="nav-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">'
-    '<path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--series-b)"/>'
-    '<path d="M2 17L12 22L22 17" stroke="var(--ink-dim)" stroke-width="1.6" fill="none"/>'
-    '<path d="M2 12L12 17L22 12" stroke="var(--series-b)" stroke-width="1.6" fill="none"/>'
-    "</svg>"
-)
-
-
-def footer_html(theme, bench_href):
-    other = UNION if theme is FLYTE else FLYTE
-    return (
-        '<footer><div class="wrap footer-row">'
-        "<div>Flyte Benchmarks &mdash; reproducible orchestration studies. "
-        '<a href="https://github.com/flyteorg/flyte-benchmarks" target="_blank" rel="noopener">Source &amp; raw data on GitHub &#8599;</a></div>'
-        '<div class="footer-links">'
-        '<a href="{bench}">All {name} benchmarks</a>'
-        '<a href="{other}">{other_name}</a>'
-        '<a href="{devbox}">Try the Devbox</a>'
-        "</div></div></footer>"
-    ).format(
-        bench=bench_href, name=theme["site_name"],
-        other=other["home_url"], other_name=other["site_name"],
-        devbox=theme["devbox_url"],
-    )
-
-
 def cta_band_html(theme, heading=None):
     heading = heading or "See it for yourself"
     return (
@@ -280,7 +226,6 @@ def render_detail_page(page):
     table_html = render_table(theme, page["table"]) if page.get("table") else ""
 
     body = """
-{nav}
 <main>
   <section class="hero bg-grid">
     <div class="wrap">
@@ -316,9 +261,7 @@ def render_detail_page(page):
 
   {cta}
 </main>
-{footer}
 """.format(
-        nav=nav_html(theme, bench_href="../index.html", crumb=page["title"]),
         eyebrow=page["eyebrow"],
         title=page["title"],
         subtitle=page["subtitle"],
@@ -335,7 +278,6 @@ def render_detail_page(page):
             if page.get("table") else ""
         ),
         cta=cta_band_html(theme),
-        footer=footer_html(theme, bench_href="../index.html"),
     )
 
     # Runs synchronously, in the same script block as the reveal engine
@@ -412,37 +354,23 @@ def render_landing_page(site_key):
     )
 
     body = """
-{nav}
 <main>
   <section class="hero bg-grid">
     <div class="wrap">
-      <span class="eyebrow"><span class="dot"></span>{tagline}</span>
       <h1>{name} Benchmarks</h1>
-      <p class="sub">Real clusters. No simulation. Every number below comes from a workload that actually ran, graded and reported as-is &mdash; failures included.</p>
-    </div>
-  </section>
-
-  <section>
-    <div class="wrap">
-      <div class="section-head">
-        <div class="section-kicker">Studies</div>
-        <h2>Pick a study</h2>
-      </div>
-      <div class="bench-grid">{cards}{soon}</div>
+      <p class="sub">{tagline}</p>
+      <div class="bench-grid" style="margin-top:40px">{cards}{soon}</div>
     </div>
   </section>
 
   {cta}
 </main>
-{footer}
 """.format(
-        nav=nav_html(theme, bench_href="index.html"),
-        tagline=theme["site_tagline"],
+        tagline=theme["landing_sub"],
         name=theme["site_label"],
         cards=cards_html,
         soon=soon_html,
         cta=cta_band_html(theme, heading="Run these benchmarks yourself"),
-        footer=footer_html(theme, bench_href="index.html"),
     )
 
     return page_shell(

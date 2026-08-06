@@ -81,7 +81,7 @@ FONT_FACES = """
 FLYTE = dict(
     site_name="flyte.org",
     site_label="Flyte",
-    site_tagline="Open source",
+    landing_sub="Learn why Flyte 2 scales better, performs faster, and lets your Agents do more with less.",
     home_url="https://flyte.org",
     devbox_url="https://flyte.org/devbox",
     # flyte.org's 2026 redesign is light-mode-primary (white pages, a dark
@@ -116,7 +116,7 @@ FLYTE = dict(
 UNION = dict(
     site_name="union.ai",
     site_label="Union",
-    site_tagline="Managed platform",
+    landing_sub="Learn how Union scales with virtually no limit and enables you to saturate your compute.",
     home_url="https://www.union.ai",
     devbox_url="https://www.union.ai/get-devbox",
     bg="#18191a",
