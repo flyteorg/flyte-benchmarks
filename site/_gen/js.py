@@ -7,17 +7,19 @@ ENGINE_JS = r"""
   function tok(name){ return css.getPropertyValue(name).trim(); }
 
   // ---------- scroll reveal ----------
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){ if (e.isIntersecting) e.target.classList.add('in-view'); });
-  }, { threshold: 0.16 });
+  // Fades in only as each figure/section actually scrolls into view. Where
+  // IntersectionObserver isn't available at all, reveal immediately rather
+  // than leaving content permanently invisible -- but never on a timer,
+  // which would fire the animation regardless of scroll position.
   var revealEls = document.querySelectorAll('.reveal, .figure');
-  revealEls.forEach(function(el){ io.observe(el); });
-  // safety net: guarantee visibility even if the observer never fires
-  // (unusual viewport/zoom, slow callback, extensions) rather than leaving
-  // content permanently opacity:0.
-  setTimeout(function(){
+  if (window.IntersectionObserver){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if (e.isIntersecting) e.target.classList.add('in-view'); });
+    }, { threshold: 0.16 });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
     revealEls.forEach(function(el){ el.classList.add('in-view'); });
-  }, 1200);
+  }
 
   // ---------- count-up ----------
   function easeOutExpo(t){ return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
@@ -39,20 +41,18 @@ ENGINE_JS = r"""
     requestAnimationFrame(step);
   }
   var countupEls = document.querySelectorAll('[data-countup]');
-  var cio = new IntersectionObserver(function(entries, obs){
-    entries.forEach(function(e){
-      if (e.isIntersecting && !e.target.dataset.counted){
-        e.target.dataset.counted = '1'; countUp(e.target); obs.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.6 });
-  countupEls.forEach(function(el){ cio.observe(el); });
-  // safety net: same rationale as the reveal observer above.
-  setTimeout(function(){
-    countupEls.forEach(function(el){
-      if (!el.dataset.counted){ el.dataset.counted = '1'; countUp(el); }
-    });
-  }, 1200);
+  if (window.IntersectionObserver){
+    var cio = new IntersectionObserver(function(entries, obs){
+      entries.forEach(function(e){
+        if (e.isIntersecting && !e.target.dataset.counted){
+          e.target.dataset.counted = '1'; countUp(e.target); obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.6 });
+    countupEls.forEach(function(el){ cio.observe(el); });
+  } else {
+    countupEls.forEach(function(el){ countUp(el); });
+  }
 
   // ---------- shared tooltip ----------
   var tip = document.createElement('div');

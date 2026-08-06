@@ -152,7 +152,7 @@ def root_vars(theme):
     return "\n  ".join(lines)
 
 
-def nav_html(theme, crumb=None, crumb_href=None):
+def nav_html(theme, bench_href, crumb=None):
     other = UNION if theme is FLYTE else FLYTE
     links = (
         '<a href="{home}">{name}</a>'
@@ -160,7 +160,7 @@ def nav_html(theme, crumb=None, crumb_href=None):
         '<a href="{other_home}">{other_name} &#8599;</a>'
     ).format(
         home=theme["home_url"], name=theme["site_name"],
-        bench=theme["benchmarks_url"],
+        bench=bench_href,
         other_home=other["home_url"], other_name=other["site_name"],
     )
     crumb_html = ""
@@ -173,7 +173,7 @@ def nav_html(theme, crumb=None, crumb_href=None):
         '<a class="btn btn-primary btn-sm nav-cta" href="{devbox}">Try the Devbox</a>'
         "</div></div></div>"
     ).format(
-        bench=theme["benchmarks_url"], name=theme["site_name"], crumb=crumb_html,
+        bench=bench_href, name=theme["site_name"], crumb=crumb_html,
         links=links, devbox=theme["devbox_url"],
         mark=NAV_MARK,
     )
@@ -188,7 +188,7 @@ NAV_MARK = (
 )
 
 
-def footer_html(theme):
+def footer_html(theme, bench_href):
     other = UNION if theme is FLYTE else FLYTE
     return (
         '<footer><div class="wrap footer-row">'
@@ -200,8 +200,8 @@ def footer_html(theme):
         '<a href="{devbox}">Try the Devbox</a>'
         "</div></div></footer>"
     ).format(
-        bench=theme["benchmarks_url"], name=theme["site_name"],
-        other=other["benchmarks_url"] if False else other["home_url"], other_name=other["site_name"],
+        bench=bench_href, name=theme["site_name"],
+        other=other["home_url"], other_name=other["site_name"],
         devbox=theme["devbox_url"],
     )
 
@@ -311,7 +311,7 @@ def render_detail_page(page):
 </main>
 {footer}
 """.format(
-        nav=nav_html(theme, crumb=page["title"]),
+        nav=nav_html(theme, bench_href="../index.html", crumb=page["title"]),
         eyebrow=page["eyebrow"],
         title=page["title"],
         subtitle=page["subtitle"],
@@ -328,7 +328,7 @@ def render_detail_page(page):
             if page.get("table") else ""
         ),
         cta=cta_band_html(theme),
-        footer=footer_html(theme),
+        footer=footer_html(theme, bench_href="../index.html"),
     )
 
     extra = "document.addEventListener('DOMContentLoaded', function(){{\n{}\n}});".format(figures_script)
@@ -347,14 +347,14 @@ def render_detail_page(page):
 LANDING_CARDS = {
     "flyte": [
         dict(
-            href="/benchmarks/flyte1-vs-flyte2",
+            href="flyte1-vs-flyte2/index.html",
             kicker="Scalability study",
             title="Outscaling Flyte v1",
             desc="Flyte v2 runs common orchestration patterns 4.3–6.5× faster and removes v1's single-process OOM cliff entirely.",
             stat="6.5× faster",
         ),
         dict(
-            href="/benchmarks/agents-write-flyte2-better",
+            href="agents-write-flyte2-better/index.html",
             kicker="Agent-authoring-cost study",
             title="Agents Write Flyte v2 Better",
             desc="A coding agent reaches a working pipeline in 1.78× fewer tokens on v2 — and solves patterns v1 can't express at all.",
@@ -363,14 +363,14 @@ LANDING_CARDS = {
     ],
     "union": [
         dict(
-            href="/benchmarks/flyte-vs-union",
+            href="flyte-vs-union/index.html",
             kicker="Multi-cluster scale-out study",
             title="Orchestration Without Limits",
             desc="Union scales out to complete 200,000-action workflows where single-cluster OSS Flyte OOM-kills its executor.",
             stat="200k actions, 0 failures",
         ),
         dict(
-            href="/benchmarks/union-reusable-containers",
+            href="union-reusable-containers/index.html",
             kicker="GPU-utilization study",
             title="Reuse or Reload",
             desc="Container reuse keeps a 7B-model GPU at a sustained 100% utilization — 4.1× faster than spinning a fresh container per call.",
@@ -424,13 +424,13 @@ def render_landing_page(site_key):
 </main>
 {footer}
 """.format(
-        nav=nav_html(theme),
+        nav=nav_html(theme, bench_href="index.html"),
         tagline=theme["site_tagline"],
         name=theme["site_label"],
         cards=cards_html,
         soon=soon_html,
         cta=cta_band_html(theme, heading="Run these benchmarks yourself"),
-        footer=footer_html(theme),
+        footer=footer_html(theme, bench_href="index.html"),
     )
 
     return page_shell(
